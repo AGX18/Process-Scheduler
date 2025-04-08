@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QTextEdit>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

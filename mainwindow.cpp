@@ -20,6 +20,11 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Priorty non-Preemptive");
     comboBox->addItem("Round Robin");
 
+
+    QTextEdit *ProcessesInput = new QTextEdit();
+    ProcessesInput->setPlaceholderText("Enter your Intial Processes");
+    ProcessesInput->setAcceptRichText(false);  // For plain text only
+
     QPushButton *startBtn = new QPushButton("Start", this);
     QPushButton *stopBtn = new QPushButton("Stop", this);
 
@@ -30,14 +35,44 @@ MainWindow::MainWindow(QWidget *parent)
     QLabel *averageWaitingTimeValue = new QLabel("NA", this);
     QLabel *averageTurnaroundTimeValue = new QLabel("NA", this);
 
+
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
+
+    QHBoxLayout *headerLayout = new QHBoxLayout;
+
+    QVBoxLayout *outputLabelLayout = new QVBoxLayout;
+
+    QHBoxLayout *averageWaitingLayout = new QHBoxLayout;
+
+    averageWaitingLayout->addWidget(averageWaitingTimelabel);
+    averageWaitingLayout->addWidget(averageWaitingTimeValue);
+
+
+    QHBoxLayout *averageTurnaroundLayout = new QHBoxLayout;
+
+    averageTurnaroundLayout->addWidget(averageTurnaroundTimelabel);
+    averageTurnaroundLayout->addWidget(averageTurnaroundTimeValue);
+
+
+    buttonLayout->addWidget(startBtn);
+    buttonLayout->addWidget(stopBtn);
+    buttonLayout->addWidget(comboBox);
+
+
+
+    outputLabelLayout->addLayout(averageTurnaroundLayout);
+    outputLabelLayout->addLayout(averageWaitingLayout);
+
+
+    headerLayout->addLayout(buttonLayout);
+
+    headerLayout->addLayout(outputLabelLayout);
+
+
     // Add widgets to layout
-    mainLayout->addWidget(comboBox);
-    mainLayout->addWidget(startBtn);
-    mainLayout->addWidget(stopBtn);
-    mainLayout->addWidget(averageWaitingTimelabel);
-    mainLayout->addWidget(averageWaitingTimeValue);
-    mainLayout->addWidget(averageTurnaroundTimelabel);
-    mainLayout->addWidget(averageTurnaroundTimeValue);
+    mainLayout->addLayout(headerLayout);
+    mainLayout->addWidget(ProcessesInput);
 
     // Set the central widget
     setCentralWidget(centralWidget);
