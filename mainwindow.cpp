@@ -54,13 +54,13 @@ MainWindow::MainWindow(QWidget *parent)
     QGridLayout *gridLayout = new QGridLayout(container);
 
     // Configure layout spacing
-    gridLayout->setHorizontalSpacing(10);  // Space between columns
+    gridLayout->setHorizontalSpacing(25);  // Space between columns
     gridLayout->setVerticalSpacing(15);    // Space between rows
     gridLayout->setContentsMargins(10, 10, 10, 10);  // Margins around edges
 
     // Add widgets in 3-column layout
     int row = 0, col = 0;
-    for (int i = 0; i < 9; i++) {  // Example with 9 items
+    for (int i = 0; i < 9; i++) {
         ProcessWidget *process = new ProcessWidget(container);
 
         gridLayout->addWidget(process, row, col);
@@ -72,6 +72,10 @@ MainWindow::MainWindow(QWidget *parent)
             row++;
         }
     }
+
+    // Configure grid layout properties
+    gridLayout->setSpacing(15);  // Space between items
+    gridLayout->setContentsMargins(10, 10, 10, 10);  // Margins around the grid
 
     // Set up scroll area
     container->setLayout(gridLayout);

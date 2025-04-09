@@ -28,7 +28,6 @@ ProcessWidget::ProcessWidget(QWidget *parent = nullptr): QWidget(parent) {
 
 
 
-
     arrival->addWidget(new QLabel("Arrival:"));
     arrival->addWidget(arrivalSpinner);
     burst->addWidget(new QLabel("Burst:"));
@@ -44,6 +43,14 @@ ProcessWidget::ProcessWidget(QWidget *parent = nullptr): QWidget(parent) {
 
     counter++;  // Increment counter after creating the widget
     setLayout(layout);
+
+    this->setStyleSheet(
+        "ProcessWidget {"
+        "   border: 2px solid #FFFFFF;"
+        "   border-radius: 5px;"
+        "   background-color: #2D2D2D;" // Needed to see white border
+        "}"
+        );
 
 }
 
