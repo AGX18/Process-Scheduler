@@ -13,7 +13,9 @@
 #include <QSlider>
 #include <QVBoxLayout>
 #include <QResizeEvent>
-
+#include "processwidget.h"
+#include <QScrollArea>
+#include <QGridLayout>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
