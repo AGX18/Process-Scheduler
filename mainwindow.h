@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QTextEdit>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QGraphicsRectItem>
 #include <QSlider>
 #include <QVBoxLayout>

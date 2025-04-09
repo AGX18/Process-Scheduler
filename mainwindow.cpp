@@ -34,6 +34,21 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(headerLayout);
 
 
+
+    QGraphicsScene* scene = new QGraphicsScene(this);
+
+
+    QGraphicsView* view = new QGraphicsView(scene);
+
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);  // Ensure it's visible
+    view->verticalScrollBar();
+
+    view->show();
+
+
+
+    mainLayout->addWidget(view);
+
     // Set the central widget
     setCentralWidget(centralWidget);
 
