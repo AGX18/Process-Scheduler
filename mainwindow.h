@@ -7,6 +7,12 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QTextEdit>
+#include <QGraphicsScene>
+#include <QGraphicsRectItem>
+#include <QSlider>
+#include <QVBoxLayout>
+#include <QResizeEvent>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,11 +32,7 @@ private:
     Ui::MainWindow *ui;
     QComboBox *comboBox;
     QPushButton *startBtn;
-    QPushButton *stopBtn;
-    QLabel *averageWaitingTimelabel;
-    QLabel *averageTurnaroundTimelabel;
-    QLabel *averageWaitingTimeValue;
-    QLabel *averageTurnaroundTimeValue;
+
 
 };
 #endif // MAINWINDOW_H

@@ -21,63 +21,26 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Round Robin");
 
 
-    QTextEdit *ProcessesInput = new QTextEdit();
-    ProcessesInput->setPlaceholderText("Enter your Intial Processes");
-    ProcessesInput->setAcceptRichText(false);  // For plain text only
 
     QPushButton *startBtn = new QPushButton("Start", this);
-    QPushButton *stopBtn = new QPushButton("Stop", this);
 
 
-    QLabel *averageWaitingTimelabel = new QLabel("Average Waiting Time:", this);
-    QLabel *averageTurnaroundTimelabel = new QLabel("Average Turnaround Time:",this);
+     QHBoxLayout *headerLayout = new QHBoxLayout;
 
-    QLabel *averageWaitingTimeValue = new QLabel("NA", this);
-    QLabel *averageTurnaroundTimeValue = new QLabel("NA", this);
-
+    headerLayout->addWidget(startBtn);
+    headerLayout->addWidget(comboBox);
 
 
-    QHBoxLayout *buttonLayout = new QHBoxLayout;
-
-    QHBoxLayout *headerLayout = new QHBoxLayout;
-
-    QVBoxLayout *outputLabelLayout = new QVBoxLayout;
-
-    QHBoxLayout *averageWaitingLayout = new QHBoxLayout;
-
-    averageWaitingLayout->addWidget(averageWaitingTimelabel);
-    averageWaitingLayout->addWidget(averageWaitingTimeValue);
-
-
-    QHBoxLayout *averageTurnaroundLayout = new QHBoxLayout;
-
-    averageTurnaroundLayout->addWidget(averageTurnaroundTimelabel);
-    averageTurnaroundLayout->addWidget(averageTurnaroundTimeValue);
-
-
-    buttonLayout->addWidget(startBtn);
-    buttonLayout->addWidget(stopBtn);
-    buttonLayout->addWidget(comboBox);
-
-
-
-    outputLabelLayout->addLayout(averageTurnaroundLayout);
-    outputLabelLayout->addLayout(averageWaitingLayout);
-
-
-    headerLayout->addLayout(buttonLayout);
-
-    headerLayout->addLayout(outputLabelLayout);
-
-
-    // Add widgets to layout
     mainLayout->addLayout(headerLayout);
-    mainLayout->addWidget(ProcessesInput);
+
 
     // Set the central widget
     setCentralWidget(centralWidget);
 
 }
+
+
+
 
 MainWindow::~MainWindow()
 {
