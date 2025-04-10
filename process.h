@@ -4,7 +4,7 @@
 class Process
 {
 public:
-    Process(int processNumber, int arrivalTime, int burstTime);
+    Process(int processNumber, int arrivalTime, int burstTime, int priority);
 
     int getProcessNumber();
 
@@ -35,6 +35,8 @@ public:
 private:
     int processNumber;
     int arrivalTime;
+    int priority;
+    bool isPriority;
     int burstTime;
     int remainingTime;
     int turnaroundTime;

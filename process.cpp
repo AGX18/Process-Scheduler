@@ -1,7 +1,7 @@
 #include "process.h"
 
-Process::Process(int processNumber, int arrivalTime, int burstTime) : processNumber(processNumber),
-    arrivalTime(arrivalTime), burstTime(burstTime), remainingTime(burstTime)
+Process::Process(int processNumber, int arrivalTime, int burstTime, int priority) : processNumber(processNumber),
+    arrivalTime(arrivalTime), burstTime(burstTime), remainingTime(burstTime), priority(priority)
 {
 
 }

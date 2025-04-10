@@ -12,8 +12,8 @@ class ProcessWidget: public QWidget
 {
     Q_OBJECT
 public:
-    explicit ProcessWidget(QWidget *parent);
-
+    explicit ProcessWidget(QWidget *parent , bool isPriority);
+    Process* getProcess();
 
 private:
     QLabel* name;

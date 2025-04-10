@@ -16,7 +16,8 @@
 #include "processwidget.h"
 #include <QScrollArea>
 #include <QGridLayout>
-
+#include <vector>
+#include <string>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -35,6 +36,8 @@ private:
     Ui::MainWindow *ui;
     QComboBox *comboBox;
     QPushButton *startBtn;
+
+    std::string scheduler;
 
 
 };
