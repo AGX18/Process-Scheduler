@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-int row = 0;
-int col = 0;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -39,33 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     mainLayout->addLayout(headerLayout);
 
-
-
-    // QGraphicsScene* scene = new QGraphicsScene(this);
-
-
-    // QGraphicsView* view = new QGraphicsView(scene);
-
-    // view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);  // Ensure it's visible
-    // view->verticalScrollBar();
-
-    // view->show();
-
-    // Create scroll area
-    QScrollArea *scrollArea = new QScrollArea(this);
-    scrollArea->setWidgetResizable(true);
-
-    // Create container widget
-    QWidget *container = new QWidget();
-    QGridLayout *gridLayout = new QGridLayout(container);
-    // Set up scroll area
-    scrollArea->setWidget(container);
-
-    // Configure layout spacing
-    gridLayout->setHorizontalSpacing(25);  // Space between columns
-    gridLayout->setVerticalSpacing(15);    // Space between rows
-    gridLayout->setContentsMargins(10, 10, 10, 10);  // Margins around edges
-
+    ProcessContainerWidget *processContainer = new ProcessContainerWidget(this);
 
     QPushButton *addprocessbtn = new QPushButton("Add process", this);
     QPushButton *resetprocessbtn = new QPushButton("Reset", this);
@@ -73,13 +45,10 @@ MainWindow::MainWindow(QWidget *parent)
     processconfig -> addWidget(addprocessbtn);
     processconfig -> addWidget(resetprocessbtn);
     mainLayout-> addLayout(processconfig);
-    // Configure grid layout properties
-    gridLayout->setSpacing(15);  // Space between items
-    gridLayout->setContentsMargins(10, 10, 10, 10);  // Margins around the grid
 
 
     // Add to your main layout
-    mainLayout->addWidget(scrollArea);
+    mainLayout->addWidget(processContainer);
 
     /**
      * @brief Scheduler
@@ -93,17 +62,10 @@ MainWindow::MainWindow(QWidget *parent)
      */
     // std::vector<bool> Scheduler(6, 0);
 
-    connect(addprocessbtn, &QPushButton::clicked, this, [this, container, gridLayout, comboBox]() {
+    connect(addprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         qDebug() << "Add Process button clicked!";
         comboBox->setEnabled(false);
-        ProcessWidget *process = new ProcessWidget(container, true);
-        gridLayout->addWidget(process, row, col);
-        //     // Move to next position
-        col++;
-        if (col >= 2) {  // 2 items per row
-            col = 0;
-            row++;
-        }
+        processContainer->addProcess();
 
     });
 
@@ -114,16 +76,12 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
 
-    // connect(resetprocessbtn, &QPushButton::clicked, this, [this, &container, &gridLayout, scrollArea, comboBox]() {
-    //     delete container;
-    //     container = new QWidget();
-    //     gridLayout = new QGridLayout(container);
-    //     // Set up scroll area
-    //     scrollArea->setWidget(container);
-    //     comboBox->setEnabled(false);
-    //     row = 0;
-    //     col = 0;
-    // });
+    connect(resetprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
+        processContainer->clearAllProcesses();
+        comboBox->setEnabled(false);
+        ProcessWidget::resetCounter();
+
+    });
 
     // Set the central widget
     setCentralWidget(centralWidget);

@@ -112,3 +112,7 @@ Process* ProcessWidget::getProcess() {
     return new Process(id, arrivalTime, burstTime, priority);
 }
 
+
+void ProcessWidget::resetCounter() {
+    counter = 0;
+}

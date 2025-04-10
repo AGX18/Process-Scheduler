@@ -14,6 +14,7 @@ class ProcessWidget: public QWidget
 public:
     explicit ProcessWidget(QWidget *parent , bool isPriority);
     Process* getProcess();
+    static void resetCounter();
 
 private:
     QLabel* name;
