@@ -37,7 +37,7 @@ private:
     QComboBox *comboBox;
     QPushButton *startBtn;
 
-    std::string scheduler;
+    QString scheduler;
 
 
 };

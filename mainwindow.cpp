@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+
     // Create a central widget and layout
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
@@ -23,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Priorty non-Preemptive");
     comboBox->addItem("Round Robin");
 
+
+    this->scheduler = comboBox->itemText(0);
 
 
     QPushButton *startBtn = new QPushButton("Start", this);
@@ -63,20 +66,6 @@ MainWindow::MainWindow(QWidget *parent)
     gridLayout->setVerticalSpacing(15);    // Space between rows
     gridLayout->setContentsMargins(10, 10, 10, 10);  // Margins around edges
 
-    // Add widgets in 3-column layout
-    // int row = 0, col = 0;
-    // for (int i = 0; i < 9; i++) {
-    //     ProcessWidget *process = new ProcessWidget(container);
-
-    //     // gridLayout->addWidget(process, row, col);
-
-    //     // Move to next position
-    //     col++;
-    //     if (col >= 2) {  // 2 items per row
-    //         col = 0;
-    //         row++;
-    //     }
-    // }
 
     QPushButton *addprocessbtn = new QPushButton("Add process", this);
     QPushButton *resetprocessbtn = new QPushButton("Reset", this);
@@ -102,10 +91,11 @@ MainWindow::MainWindow(QWidget *parent)
         priority nonpreemptive:4
         round robin :5
      */
-    std::vector<bool> Scheduler(6, 0);
+    // std::vector<bool> Scheduler(6, 0);
 
-    connect(addprocessbtn, &QPushButton::clicked, this, [this, container, gridLayout]() {
+    connect(addprocessbtn, &QPushButton::clicked, this, [this, container, gridLayout, comboBox]() {
         qDebug() << "Add Process button clicked!";
+        comboBox->setEnabled(false);
         ProcessWidget *process = new ProcessWidget(container, true);
         gridLayout->addWidget(process, row, col);
         //     // Move to next position
@@ -118,10 +108,22 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // connect()
+    connect(comboBox, &QComboBox::currentTextChanged, this, [this](const QString &choice) {
+        this->scheduler = choice;
+        qDebug() << this->scheduler;
+    });
 
 
-
-
+    // connect(resetprocessbtn, &QPushButton::clicked, this, [this, &container, &gridLayout, scrollArea, comboBox]() {
+    //     delete container;
+    //     container = new QWidget();
+    //     gridLayout = new QGridLayout(container);
+    //     // Set up scroll area
+    //     scrollArea->setWidget(container);
+    //     comboBox->setEnabled(false);
+    //     row = 0;
+    //     col = 0;
+    // });
 
     // Set the central widget
     setCentralWidget(centralWidget);
