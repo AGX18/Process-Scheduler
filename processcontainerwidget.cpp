@@ -33,10 +33,16 @@ ProcessContainerWidget::ProcessContainerWidget(QWidget *parent)
     mainLayout->addWidget(m_scrollArea);
 }
 
-void ProcessContainerWidget::addProcess()
+void ProcessContainerWidget::addProcess(QString scheduler)
 {
+    bool isPriority = false;
+
+    if (scheduler == "Priorty Preemptive" | scheduler == "Priorty non-Preemptive") {
+        isPriority = true;
+    }
+
     // TODO: set the boolean value passed on the type of the scheduler
-    ProcessWidget *process = new ProcessWidget(m_container, false);
+    ProcessWidget *process = new ProcessWidget(m_container, isPriority);
     m_gridLayout->addWidget(process, m_row, m_col);
 
     // Update position

@@ -11,7 +11,7 @@ class ProcessContainerWidget : public QWidget
     Q_OBJECT
 public:
     explicit ProcessContainerWidget(QWidget *parent = nullptr);
-    void addProcess();
+    void addProcess(QString scheduler);
     void clearAllProcesses();  // New function to clear all processes
 
 protected:

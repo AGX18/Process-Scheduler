@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         qDebug() << "Add Process button clicked!";
         comboBox->setEnabled(false);
-        processContainer->addProcess();
+        processContainer->addProcess(this->scheduler);
 
     });
 
@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(resetprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         processContainer->clearAllProcesses();
-        comboBox->setEnabled(false);
+        comboBox->setEnabled(true);
         ProcessWidget::resetCounter();
 
     });
