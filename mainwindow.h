@@ -19,6 +19,9 @@
 #include <vector>
 #include <string>
 #include "processcontainerwidget.h"
+#include "scheduler.h"
+#include <QThread>
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -35,10 +38,22 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QComboBox *comboBox;
-    QPushButton *startBtn;
+    // QComboBox *comboBox;
+    // QPushButton *startBtn;
 
     QString scheduler;
+
+
+    void clearScreen();
+
+    // Helper function to recursively clear a layout
+    void clearLayout(QLayout* layout);
+
+    // Helper function to clear all child widgets
+    void clearChildWidgets(QWidget* parent);
+
+public slots:
+    void visualizeProcesses();
 
 
 };

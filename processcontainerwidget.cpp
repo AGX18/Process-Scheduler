@@ -77,3 +77,32 @@ void ProcessContainerWidget::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
     // Optional: Add custom resize handling if needed
 }
+
+/**
+
+QVector<ProcessWidget*> ProcessContainerWidget::getAllProcessWidgets() const {
+    QVector<ProcessWidget*> processWidgets;
+    QGridLayout* gridLayout = qobject_cast<QGridLayout*>(this->layout());
+
+    if (!gridLayout) {
+        qWarning() << "Layout is not a QGridLayout!";
+        return processWidgets;  // Return empty vector if layout is invalid
+    }
+
+    // Iterate over all items in the grid layout
+    for (int i = 0; i < gridLayout->count(); ++i) {
+        QLayoutItem* item = gridLayout->itemAt(i);
+        if (!item || !item->widget()) continue;  // Skip empty items
+
+        ProcessWidget* widget = qobject_cast<ProcessWidget*>(item->widget());
+        if (widget) {
+            processWidgets.append(widget);
+        }
+    }
+
+    return processWidgets;
+}
+
+*/
+
+

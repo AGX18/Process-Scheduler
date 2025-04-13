@@ -83,6 +83,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     });
 
+
+
+    // start button
+    // rerender
+    connect(startBtn, &QPushButton::clicked, this, &MainWindow::visualizeProcesses);
+
+
     // Set the central widget
     setCentralWidget(centralWidget);
 
@@ -94,4 +101,89 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+
+
+void MainWindow::clearScreen()
+{
+    // 1. Clear the central widget
+    if (centralWidget()) {
+        // Remove layout items first
+        if (QLayout* layout = centralWidget()->layout()) {
+            clearLayout(layout);
+        }
+
+        // Delete the central widget itself
+        centralWidget()->deleteLater();
+    }
+
+    // 2. Clear any remaining top-level widgets
+    clearChildWidgets(this);
+
+}
+
+// Helper function to recursively clear a layout
+void MainWindow::clearLayout(QLayout* layout)
+{
+    if (!layout) return;
+
+    while (QLayoutItem* item = layout->takeAt(0)) {
+        if (QWidget* widget = item->widget()) {
+            widget->deleteLater();
+        }
+        else if (QLayout* childLayout = item->layout()) {
+            clearLayout(childLayout);
+        }
+        delete item;
+    }
+}
+
+// Helper function to clear all child widgets
+void MainWindow::clearChildWidgets(QWidget* parent)
+{
+    if (!parent) return;
+
+    const auto children = parent->findChildren<QWidget*>(
+        QString(), Qt::FindDirectChildrenOnly);
+
+    for (QWidget* child : children) {
+        if (child != centralWidget()) {  // Skip central widget if still present
+            child->deleteLater();
+        }
+    }
+}
+
+void MainWindow::visualizeProcesses()
+{
+    // first clear the screen
+    clearScreen();
+
+
+
+
+
+    // Create new central widget for new screen
+    QWidget *centralWidget = new QWidget(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+
+
+    // add new screen widgets here
+
+
+    // now we get to the part where we visualize the scheduling of the process.
+
+    // Scheduler* choosenScheduler;
+    // // assign the choosenScheduler
+    // switch (this->scheduler) {
+
+    // }
+
+    // QThread schedulingThread;
+    // schedulingThread.setObjectName("Scheduling Thread");
+    // choosenScheduler->moveToThread(&schedulingThread);
+    // QObject::connect(&schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
+
+    setCentralWidget(centralWidget);
+
 }

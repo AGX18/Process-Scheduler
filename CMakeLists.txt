@@ -27,6 +27,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         processwidget.h processwidget.cpp
         process.h process.cpp
         processcontainerwidget.h processcontainerwidget.cpp
+        scheduler.h scheduler.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET OSLiveScheduler APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
