@@ -22,7 +22,10 @@ public:
      * send a signal to the main Window to reflect those changes in the shown screen
      */
 
-
+    /**
+     * @brief waitOneSecond
+     * you can use this function or just add `QThread::currentThread()->msleep(1000);`
+     */
     void waitOneSecond();
 
     virtual ~Scheduler();
