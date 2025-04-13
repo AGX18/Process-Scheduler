@@ -21,6 +21,8 @@
 #include "processcontainerwidget.h"
 #include "scheduler.h"
 #include <QThread>
+#include <QDebug>
+#include "process.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -42,6 +44,8 @@ private:
     // QPushButton *startBtn;
 
     QString scheduler;
+
+    std::vector<Process> processes;
 
 
     void clearScreen();

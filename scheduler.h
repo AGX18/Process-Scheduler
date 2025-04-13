@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QThread>
 #include <QDebug>
+#include "process.h"
+#include <vector>
 
 /**
  * @brief The Scheduler class
@@ -13,8 +15,11 @@
 class Scheduler : public QObject
 {
     Q_OBJECT
+
+private:
+    std::vector<Process> *Processes;
 public:
-    explicit Scheduler(QObject *parent = nullptr);
+    explicit Scheduler(QObject *parent = nullptr, std::vector<Process> *Processes = new std::vector<Process>);
 
     /**
      * @brief schedule

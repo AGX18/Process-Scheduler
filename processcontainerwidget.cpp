@@ -72,6 +72,7 @@ void ProcessContainerWidget::clearAllProcesses()
     m_col = 0;
 }
 
+
 void ProcessContainerWidget::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);

@@ -5,6 +5,8 @@
 #include <QScrollArea>
 #include <QGridLayout>
 #include "processwidget.h"
+#include "process.h"
+#include <vector>
 
 class ProcessContainerWidget : public QWidget
 {

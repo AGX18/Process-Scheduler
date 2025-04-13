@@ -66,7 +66,6 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "Add Process button clicked!";
         comboBox->setEnabled(false);
         processContainer->addProcess(this->scheduler);
-
     });
 
     // connect()
@@ -87,7 +86,27 @@ MainWindow::MainWindow(QWidget *parent)
 
     // start button
     // rerender
-    connect(startBtn, &QPushButton::clicked, this, &MainWindow::visualizeProcesses);
+    connect(startBtn, &QPushButton::clicked, this, [processContainer, this](){
+        /**
+         * add all the processes
+        */
+        // std::vector<Process*>* processes = new std::vector<Process*>();
+        QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
+        int i = 0;
+        for (ProcessWidget* widget : processWidgets) {
+            processes.push_back(widget->getProcess());
+
+        }
+
+
+        visualizeProcesses();
+
+
+    });
+
+
+    // connect(startBtn, &QPushButton::clicked, this
+    // visualizeProcesses();
 
 
     // Set the central widget
@@ -156,6 +175,7 @@ void MainWindow::clearChildWidgets(QWidget* parent)
 
 void MainWindow::visualizeProcesses()
 {
+
     // first clear the screen
     clearScreen();
 

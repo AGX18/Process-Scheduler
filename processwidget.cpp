@@ -50,7 +50,7 @@ int ProcessWidget::counter = 0;
 
 
 
-ProcessWidget::ProcessWidget(QWidget *parent = nullptr, bool isPriority = false): QWidget(parent) {
+ProcessWidget::ProcessWidget(QWidget *parent = nullptr, bool isPriority = false): QWidget(parent), isPriority(isPriority) {
     name = new QLabel("Process " + QString::number(counter), this);
     arrivalSpinner = new QSpinBox(this);
     burstSpinner = new QSpinBox(this);
@@ -69,7 +69,7 @@ ProcessWidget::ProcessWidget(QWidget *parent = nullptr, bool isPriority = false)
 
     QVBoxLayout *burst = new QVBoxLayout(this);
 
-
+    this->id = counter;
 
 
 
@@ -92,7 +92,8 @@ ProcessWidget::ProcessWidget(QWidget *parent = nullptr, bool isPriority = false)
         priority->addWidget(prioritySpinner);
         layout->addLayout(priority);
     }
-
+    QString widgetName = QString("ProcessWidget %1").arg(counter);
+    this->setObjectName(widgetName);
     counter++;  // Increment counter after creating the widget
     setLayout(layout);
 
@@ -101,18 +102,36 @@ ProcessWidget::ProcessWidget(QWidget *parent = nullptr, bool isPriority = false)
 }
 
 
-Process* ProcessWidget::getProcess() {
-    int arrivalTime = arrivalSpinner->value();
-    int burstTime = burstSpinner->value();
-    int priority = prioritySpinner->value();
-    // TODO: set isPriority based on the value of the scheduler
-
-    int processID = id;
-
-    return new Process(id, arrivalTime, burstTime, priority);
+Process ProcessWidget::getProcess() {
+    return Process(getProcessID(), getArrivalTime(), getBurstTime(), getPriority());
 }
 
 
 void ProcessWidget::resetCounter() {
     counter = 0;
 }
+
+int ProcessWidget::getProcessID()
+{
+    return id;
+}
+
+int ProcessWidget::getArrivalTime()
+{
+    return arrivalSpinner->value();
+}
+
+int ProcessWidget::getBurstTime()
+{
+    return burstSpinner->value();
+}
+
+int ProcessWidget::getPriority()
+{
+    if (isPriority) {
+        return prioritySpinner->value();
+    } else {
+        return 0;
+    }
+}
+

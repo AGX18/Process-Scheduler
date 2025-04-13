@@ -1,7 +1,7 @@
 #include "scheduler.h"
 
-Scheduler::Scheduler(QObject *parent)
-    : QObject{parent}
+Scheduler::Scheduler(QObject *parent, std::vector<Process>* Processes)
+    : QObject{parent}, Processes(Processes)
 {
     qInfo() << this << "constructed" << QThread::currentThread();
 }
