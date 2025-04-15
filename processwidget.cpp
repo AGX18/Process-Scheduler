@@ -135,3 +135,9 @@ int ProcessWidget::getPriority()
     }
 }
 
+
+int ProcessWidget::getCounter() {
+    return counter;
+}
+
+

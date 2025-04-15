@@ -189,6 +189,81 @@ void MainWindow::visualizeProcesses()
 
 
     // add new screen widgets here
+    // === GANTT CHART AREA ===
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    QGraphicsView *view = new QGraphicsView(scene);
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setFixedHeight(100); // Thin look
+
+    mainLayout->addWidget(view); // Add scene to the layout
+
+    // Example: Function to add a rectangle every second (you'll call this via QTimer)
+    auto addRectangleToScene = [scene]() {
+        static int x = 0;
+        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
+        x += 60;
+    };
+
+    QTimer *rectTimer = new QTimer(this);
+    connect(rectTimer, &QTimer::timeout, addRectangleToScene);
+    rectTimer->start(1000); // 1 second interval
+
+    // === TABLE AREA ===
+    QTableWidget *table = new QTableWidget(ProcessWidget::getCounter(), 6, this); // 'counter' is your row count
+    table->setHorizontalHeaderLabels({"Process", "Arrival", "Burst", "Remaining", "Turnaround", "Waiting"});
+    table->verticalHeader()->setVisible(false);
+    table->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    table->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // === RIGHT SIDE PANEL ===
+    QWidget *rightPanel = new QWidget(this);
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightPanel);
+
+    // Timer Label
+    QLabel *timerLabel = new QLabel("Time: 0", this);
+    QFont font = timerLabel->font();
+    font.setPointSize(14);
+    font.setBold(true);
+    timerLabel->setFont(font);
+    rightLayout->addWidget(timerLabel);
+
+    // Update label every second
+    QTimer *stopwatch = new QTimer(this);
+    int *timeCounter = new int(0); // Or use a class member instead
+    connect(stopwatch, &QTimer::timeout, this, [timerLabel, timeCounter]() {
+        (*timeCounter)++;
+        timerLabel->setText(QString("Time: %1").arg(*timeCounter));
+    });
+    stopwatch->start(1000);
+
+    // Arrival Time Widget
+    QSpinBox *arrivalSpin = new QSpinBox(this);
+    arrivalSpin->setRange(0, 1000);
+    QLabel *arrivalLabel = new QLabel("Arrival Time", this);
+
+    // Burst Time Widget
+    QSpinBox *burstSpin = new QSpinBox(this);
+    burstSpin->setRange(1, 1000);
+    QLabel *burstLabel = new QLabel("Burst Time", this);
+
+    rightLayout->addWidget(arrivalLabel);
+    rightLayout->addWidget(arrivalSpin);
+    rightLayout->addWidget(burstLabel);
+    rightLayout->addWidget(burstSpin);
+    rightLayout->addStretch(); // Push everything up
+
+    // === Combine Table + Right Panel ===
+    QHBoxLayout *bottomLayout = new QHBoxLayout;
+    bottomLayout->addWidget(table, 3);       // Takes 3x space
+    bottomLayout->addWidget(rightPanel, 1);  // Takes 1x space
+
+    mainLayout->addLayout(bottomLayout); // Add bottom layout to main vertical layout
+
+    // Step 3: Set everything
+    centralWidget->setLayout(mainLayout);
+    setCentralWidget(centralWidget);
 
 
     // now we get to the part where we visualize the scheduling of the process.
@@ -204,6 +279,5 @@ void MainWindow::visualizeProcesses()
     // choosenScheduler->moveToThread(&schedulingThread);
     // QObject::connect(&schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
 
-    setCentralWidget(centralWidget);
 
 }

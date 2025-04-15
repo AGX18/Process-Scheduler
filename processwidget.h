@@ -21,6 +21,7 @@ public:
     int getArrivalTime();
     int getBurstTime();
     int getPriority();
+    static int getCounter();
 
 private:
     QLabel* name;

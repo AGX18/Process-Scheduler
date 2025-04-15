@@ -23,6 +23,9 @@
 #include <QThread>
 #include <QDebug>
 #include "process.h"
+#include <QTimer>
+#include <QTableWidget>
+#include <QHeaderView>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
