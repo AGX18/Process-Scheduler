@@ -16,8 +16,9 @@ class Scheduler : public QObject
 {
     Q_OBJECT
 
-private:
+protected:
     std::vector<Process> *Processes;
+
 public:
     explicit Scheduler(QObject *parent = nullptr, std::vector<Process> *Processes = new std::vector<Process>);
 
@@ -40,7 +41,8 @@ signals:
      * @brief dataChanged
      * the signal that gets emited to the main window when data is changed
      */
-    void dataChanged();
+    void dataChanged(int processID);
+    void ProcessFinished(int processID,int waitingTime, int TurnaroundTime);
 
 
 public slots:
