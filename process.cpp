@@ -1,7 +1,7 @@
 #include "process.h"
 
 Process::Process(int processNumber, int arrivalTime, int burstTime, int priority) : processNumber(processNumber),
-    arrivalTime(arrivalTime), burstTime(burstTime), remainingTime(burstTime), priority(priority)
+    arrivalTime(arrivalTime), burstTime(burstTime), remainingTime(burstTime), priority(priority), startTime(-1)
 {
 
 }
@@ -59,4 +59,24 @@ void Process::decrementRemainingTime() {
         this->remainingTime--;
     }
 
+}
+
+int Process::getStartTime() const
+{
+    return startTime;
+}
+
+void Process::setStartTime(int newStartTime)
+{
+    startTime = newStartTime;
+}
+
+int Process::getFinishTime() const
+{
+    return finishTime;
+}
+
+void Process::setFinishTime(int newFinishTime)
+{
+    finishTime = newFinishTime;
 }

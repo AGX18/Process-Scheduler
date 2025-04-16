@@ -32,6 +32,14 @@ public:
 
     void decrementRemainingTime();
 
+
+
+    int getStartTime() const;
+    void setStartTime(int newStartTime);
+
+    int getFinishTime() const;
+    void setFinishTime(int newFinishTime);
+
 private:
     int processNumber;
     int arrivalTime;
@@ -41,6 +49,8 @@ private:
     int remainingTime;
     int turnaroundTime;
     int waitingTime;
+    int startTime;
+    int finishTime;
 };
 
 #endif // PROCESS_H

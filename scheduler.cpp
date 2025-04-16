@@ -1,7 +1,7 @@
 #include "scheduler.h"
 
-Scheduler::Scheduler(QObject *parent, std::vector<Process>* Processes)
-    : QObject{parent}, Processes(Processes)
+Scheduler::Scheduler(QObject *parent,  std::vector<Process> Processes)
+    : QObject{parent}, Processes(std::move(Processes))
 {
     qInfo() << this << "constructed" << QThread::currentThread();
 }
@@ -18,4 +18,9 @@ void Scheduler::waitOneSecond()
 Scheduler::~Scheduler()
 {
     qInfo() << this << "deconstructed" << QThread::currentThread();
+}
+
+void Scheduler::addNewProcess(Process* p)
+{
+    this->Processes.emplace_back(*p);
 }

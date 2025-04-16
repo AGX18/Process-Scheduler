@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Priorty non-Preemptive");
     comboBox->addItem("Round Robin");
 
+    QSpinBox* timeQ;
+    QLabel* label;
 
     this->scheduler = comboBox->itemText(0);
 
@@ -69,9 +71,26 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // connect()
-    connect(comboBox, &QComboBox::currentTextChanged, this, [this](const QString &choice) {
+    connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable{
         this->scheduler = choice;
         qDebug() << this->scheduler;
+        if (scheduler == "Round Robin") {
+            if (timeQ == nullptr) {
+                timeQ = new QSpinBox(this);
+                label = new QLabel("Time Quantum", this);
+                headerLayout->addWidget(label);
+                headerLayout->addWidget(timeQ);
+                connect(timeQ, &QSpinBox::valueChanged, [this](int value) {
+                    this->timeQuantum = value;
+                    qDebug() << this->timeQuantum;
+                });
+            }
+        } else {
+            timeQ->deleteLater();
+            label->deleteLater();
+            label = nullptr;
+            timeQ = nullptr;
+        }
     });
 
 
@@ -211,11 +230,43 @@ void MainWindow::visualizeProcesses()
 
     // === TABLE AREA ===
     QTableWidget *table = new QTableWidget(ProcessWidget::getCounter(), 6, this); // 'counter' is your row count
-    table->setHorizontalHeaderLabels({"Process", "Arrival", "Burst", "Remaining", "Turnaround", "Waiting"});
+    table->setHorizontalHeaderLabels({"Process ID", "Arrival", "Burst", "Remaining", "Turnaround", "Waiting"});
     table->verticalHeader()->setVisible(false);
     table->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     table->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // First column : Process ID -> does not change
+    for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
+        QString value = QString("%1").arg(row);
+         table->setItem(row, 0, new QTableWidgetItem(value));
+    }
+
+    // Second column : Arrival Time
+    for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
+        QString value = QString("%1").arg(processes[row].getArrivalTime());
+        table->setItem(row, 1, new QTableWidgetItem(value));
+    }
+
+
+    // Third and Fourth column : Burst Time and Remaining
+    for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
+        QString value = QString("%1").arg(processes[row].getBurstTime());
+        table->setItem(row, 2, new QTableWidgetItem(value));
+        table->setItem(row, 3, new QTableWidgetItem(value));
+    }
+
+
+    // Fifth column : Turnaround Time
+    for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
+        QString value = QString("%1").arg(-1);
+        table->setItem(row, 4, new QTableWidgetItem(value));
+        table->setItem(row, 5, new QTableWidgetItem(value));
+    }
+
+
+
+
 
     // === RIGHT SIDE PANEL ===
     QWidget *rightPanel = new QWidget(this);
@@ -248,11 +299,71 @@ void MainWindow::visualizeProcesses()
     burstSpin->setRange(1, 1000);
     QLabel *burstLabel = new QLabel("Burst Time", this);
 
-    rightLayout->addWidget(arrivalLabel);
-    rightLayout->addWidget(arrivalSpin);
-    rightLayout->addWidget(burstLabel);
-    rightLayout->addWidget(burstSpin);
-    rightLayout->addStretch(); // Push everything up
+    QPushButton* liveMode = new QPushButton("Activate Live Mode", this);
+
+
+    rightLayout->addWidget(liveMode);
+    QPushButton* addProcess;
+
+
+
+    connect(liveMode, &QPushButton::clicked, [this, liveMode, rightLayout, addProcess, table]() mutable {
+        if (liveMode != nullptr) {
+            liveMode->deleteLater();
+            liveMode = nullptr;
+        }
+        auto havePriority = [](QString scheduler) {
+            if (scheduler == "Priorty Preemptive" | scheduler == "Priorty non-Preemptive") {
+                return true;
+            }
+            return false;
+        };
+        ProcessWidget *liveProcess = new ProcessWidget(this, havePriority(this->scheduler));
+        addProcess = new QPushButton("add Process", this);
+        rightLayout->addWidget(addProcess);
+        rightLayout->addWidget(liveProcess);
+        // rightLayout->addStretch(); // Push everything up
+
+        connect(addProcess, &QPushButton::clicked, [this, rightLayout, havePriority, liveProcess, table]() mutable {
+            int row = ProcessWidget::getCounter() - 1;
+            qDebug() << row;
+            table->insertRow(row);
+            QString value = QString("%1").arg(row);
+            table->setItem(row, 0, new QTableWidgetItem(value));
+
+            // Arrival Time
+            value = QString("%1").arg(liveProcess->getArrivalTime());
+            table->setItem(row, 1, new QTableWidgetItem(value));
+
+
+            value = QString("%1").arg(liveProcess->getBurstTime());
+            table->setItem(row, 2, new QTableWidgetItem(value));
+            table->setItem(row, 3, new QTableWidgetItem(value));
+
+            value = QString("%1").arg(-1);
+            table->setItem(row, 4, new QTableWidgetItem(value));
+            table->setItem(row, 5, new QTableWidgetItem(value));
+
+
+            // emit the info
+            emit sendNewProcessInfo(new Process(row, liveProcess->getArrivalTime(), liveProcess->getBurstTime(), liveProcess->getPriority()));
+
+
+            liveProcess->deleteLater();
+            liveProcess = new ProcessWidget(this, havePriority(this->scheduler));
+            rightLayout->addWidget(liveProcess);
+        });
+
+    });
+
+
+
+
+    // rightLayout->addWidget(arrivalLabel);
+    // rightLayout->addWidget(arrivalSpin);
+    // rightLayout->addWidget(burstLabel);
+    // rightLayout->addWidget(burstSpin);
+    // rightLayout->addStretch(); // Push everything up
 
     // === Combine Table + Right Panel ===
     QHBoxLayout *bottomLayout = new QHBoxLayout;
@@ -279,5 +390,7 @@ void MainWindow::visualizeProcesses()
     // choosenScheduler->moveToThread(&schedulingThread);
     // QObject::connect(&schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
 
+    // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
+    // and sendNewProcess
 
 }

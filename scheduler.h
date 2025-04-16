@@ -17,11 +17,10 @@ class Scheduler : public QObject
     Q_OBJECT
 
 protected:
-    std::vector<Process> *Processes;
+    std::vector<Process> Processes;
 
 public:
-    explicit Scheduler(QObject *parent = nullptr, std::vector<Process> *Processes = new std::vector<Process>);
-
+    explicit Scheduler(QObject *parent = nullptr, std::vector<Process> Processes = {});
     /**
      * @brief schedule
      * the function that changes the data and
@@ -43,10 +42,13 @@ signals:
      */
     void dataChanged(int processID);
     void ProcessFinished(int processID,int waitingTime, int TurnaroundTime);
-
+// emit datachanged(Processid);
+// emit ProcessFinshed(pid, waitingtime, turnaround time)
 
 public slots:
     virtual void schedule() = 0;
+    void addNewProcess(Process* p);
+
 };
 
 #endif // SCHEDULER_H

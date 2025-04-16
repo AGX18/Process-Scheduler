@@ -29,6 +29,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         processcontainerwidget.h processcontainerwidget.cpp
         scheduler.h scheduler.cpp
         Data.cpp
+        # fcfs.h fcfs.cpp
 
     )
 # Define target properties for Android with Qt 6 as:

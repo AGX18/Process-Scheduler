@@ -45,6 +45,7 @@ private:
     Ui::MainWindow *ui;
     // QComboBox *comboBox;
     // QPushButton *startBtn;
+    int timeQuantum;
 
     QString scheduler;
 
@@ -58,6 +59,17 @@ private:
 
     // Helper function to clear all child widgets
     void clearChildWidgets(QWidget* parent);
+
+    bool havePriority(QString scheduler) {
+        if (scheduler == "Priorty Preemptive" | scheduler == "Priorty non-Preemptive") {
+            return true;
+        }
+        return false;
+    }
+
+signals:
+    void sendNewProcessInfo(Process* process);
+
 
 public slots:
     void visualizeProcesses();
