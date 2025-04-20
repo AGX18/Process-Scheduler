@@ -23,4 +23,5 @@ Scheduler::~Scheduler()
 void Scheduler::addNewProcess(Process* p)
 {
     this->Processes.emplace_back(*p);
+    qDebug() << p->getProcessNumber() << "adding a new process";
 }

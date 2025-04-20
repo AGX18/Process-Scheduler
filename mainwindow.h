@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QTableWidget>
 #include <QHeaderView>
+#include "roundrobin.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -46,6 +47,8 @@ private:
     // QComboBox *comboBox;
     // QPushButton *startBtn;
     int timeQuantum;
+
+    QThread* schedulingThread;
 
     QString scheduler;
 

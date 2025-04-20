@@ -47,7 +47,7 @@ signals:
 
 public slots:
     virtual void schedule() = 0;
-    void addNewProcess(Process* p);
+    virtual void addNewProcess(Process* p);
 
 };
 

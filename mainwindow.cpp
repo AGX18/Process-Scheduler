@@ -138,7 +138,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    if (schedulingThread && schedulingThread->isRunning()) {
+        schedulingThread->quit();
+        schedulingThread->wait();
+    }
     delete ui;
+
 }
 
 
@@ -348,7 +353,6 @@ void MainWindow::visualizeProcesses()
             // emit the info
             emit sendNewProcessInfo(new Process(row, liveProcess->getArrivalTime(), liveProcess->getBurstTime(), liveProcess->getPriority()));
 
-
             liveProcess->deleteLater();
             liveProcess = new ProcessWidget(this, havePriority(this->scheduler));
             rightLayout->addWidget(liveProcess);
@@ -379,18 +383,34 @@ void MainWindow::visualizeProcesses()
 
     // now we get to the part where we visualize the scheduling of the process.
 
-    // Scheduler* choosenScheduler;
-    // // assign the choosenScheduler
-    // switch (this->scheduler) {
+    Scheduler* choosenScheduler;
+    // assign the choosenScheduler
+    if (this->scheduler == "Round Robin") {
+        qDebug() << "round robin";
+        choosenScheduler = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+    }
 
-    // }
-
-    // QThread schedulingThread;
-    // schedulingThread.setObjectName("Scheduling Thread");
-    // choosenScheduler->moveToThread(&schedulingThread);
-    // QObject::connect(&schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
+    this->schedulingThread = new QThread(this);
+    schedulingThread->setObjectName("Scheduling Thread");
+    choosenScheduler->moveToThread(this->schedulingThread);
+    QObject::connect(schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
 
     // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
     // and sendNewProcess
+    QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
+
+    QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
+        qDebug() << "decrementing";
+        QTableWidgetItem* item = table->item(processID, 3);
+        if (item) {
+            int value = item->text().toInt();
+            item->setText(QString::number(value - 1));
+        }
+    });
+
+    connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
+
+
+    schedulingThread->start();
 
 }

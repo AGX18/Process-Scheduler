@@ -13,7 +13,7 @@ int Process::getProcessNumber() {
 }
 
 
-int Process::getArrivalTime() {
+int Process::getArrivalTime() const {
     return arrivalTime;
 }
 
@@ -22,7 +22,7 @@ void Process::setArrivalTime(int arrivalTime) {
 }
 
 
-int Process::getBurstTime() {
+int Process::getBurstTime() const {
     return burstTime;
 }
 
@@ -31,7 +31,7 @@ void Process::setBurstTime(int burstTime) {
     this->remainingTime = burstTime;
 }
 
-int Process::getRemainingTime() {
+int Process::getRemainingTime() const {
     return remainingTime;
 }
 
@@ -39,7 +39,7 @@ void Process::setRemainingTime(int remainingTime) {
     this->remainingTime = remainingTime;
 }
 
-int Process::getTurnaroundTime() {
+int Process::getTurnaroundTime() const {
     return turnaroundTime;
 }
 
@@ -47,7 +47,7 @@ void Process::setTurnaroundTime(int turnaroundTime) {
     this->turnaroundTime = turnaroundTime;
 }
 
-int Process::getWaitingTime() {
+int Process::getWaitingTime() const {
     return waitingTime;
 }
 
