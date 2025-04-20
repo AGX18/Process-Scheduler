@@ -10,7 +10,7 @@ RoundRobin::RoundRobin(QObject *parent, std::vector<Process> processes, int time
     });
 
     this->schedulerTimer = new QTimer(this);
-    QThread::sleep(1);  // Sleep for 1 second
+    // QThread::sleep(1);  // Sleep for 1 second
     connect(schedulerTimer, &QTimer::timeout, this, &RoundRobin::schedule);
     schedulerTimer->start(1000);  // 1 second interval
 }
@@ -22,11 +22,15 @@ RoundRobin::~RoundRobin()
 }
 
 void RoundRobin::schedule() {
-    qDebug() << "Scheduler tick! Current time: " << currentTime;
+    qDebug() << "Scheduler tick! Current time: " << this->currentTime;
+
 
     // Check if a process has arrived
     for (int i = indexArrived; i < processes.size(); ++i) {
-        if (processes[i].getArrivalTime() <= currentTime) {
+        if (processes[i].getArrivalTime() <= this->currentTime) {
+            qDebug() << processes[i].getArrivalTime();
+            qDebug() << processes[i].getBurstTime();
+
             arrivedQueue.push_back(&processes[i]);
             indexArrived++;
         } else {
@@ -36,12 +40,12 @@ void RoundRobin::schedule() {
 
     // If no process has arrived and there is no process that is running , do nothing
     if (arrivedQueue.empty() && this->currentProcess == nullptr) {
-        currentTime++;
+        this->currentTime++;
         return;
     }
 
     // Check if a process has been chosen or if we need to pick a new one
-    if (this->currentProcess == nullptr || this->remainingExecTimeForProcess == 0 || this->currentProcess->getRemainingTime() == 0) {
+    if (this->currentProcess == nullptr || this->remainingExecTimeForProcess == 0) {
         // If the current process still has remaining time, move it back to the arrived queue
         if (this->currentProcess != nullptr && this->currentProcess->getRemainingTime() != 0) {
             arrivedQueue.push_back(this->currentProcess);  // Do not delete the current process here!
@@ -56,16 +60,17 @@ void RoundRobin::schedule() {
 
     }
 
-    // Emit signal to update data (such as UI)
+    // Emit signal to update data
     emit dataChanged(this->currentProcess->getProcessNumber());
-
+    qDebug() << "decrementing the remaining time of the process: P" << this->currentProcess->getProcessNumber();
     // Decrement the process's remaining time and the time quantum
     this->currentProcess->decrementRemainingTime();
+    qDebug() << "remaining time is: " << this->currentProcess->getRemainingTime();
     this->remainingExecTimeForProcess--;
 
     // If the process has finished, calculate turnaround and waiting times
     if (this->currentProcess->getRemainingTime() == 0) {
-        int turnaround = currentTime - this->currentProcess->getArrivalTime();
+        int turnaround = (this->currentTime + 1)- this->currentProcess->getArrivalTime();
         int waiting = turnaround - this->currentProcess->getBurstTime();
         this->totalWaitingTime += waiting;
         this->totalTurnaroundTime += turnaround;
@@ -73,11 +78,13 @@ void RoundRobin::schedule() {
         this->currentProcess = nullptr;
     }
 
-    currentTime++;  // Increment the clock
+    this->currentTime++;  // Increment the clock
 }
 
 void RoundRobin::addNewProcess(Process *p)
 {
     qDebug() << "Adding a new Process" << p->getProcessNumber();
     processes.push_back(*p);  // Add the new process to the list
+
+
 }

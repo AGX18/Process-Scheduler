@@ -22,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Priorty non-Preemptive");
     comboBox->addItem("Round Robin");
 
-    QSpinBox* timeQ;
-    QLabel* label;
+    QSpinBox* timeQ = nullptr;
+    QLabel* label = nullptr;
 
     this->scheduler = comboBox->itemText(0);
 
@@ -86,10 +86,14 @@ MainWindow::MainWindow(QWidget *parent)
                 });
             }
         } else {
-            timeQ->deleteLater();
-            label->deleteLater();
-            label = nullptr;
-            timeQ = nullptr;
+            if (timeQ != nullptr) {
+                timeQ->deleteLater();
+                timeQ = nullptr;
+            }
+            if (label != nullptr) {
+                label->deleteLater();
+                label = nullptr;
+            }
         }
     });
 
@@ -405,6 +409,20 @@ void MainWindow::visualizeProcesses()
         if (item) {
             int value = item->text().toInt();
             item->setText(QString::number(value - 1));
+        }
+    });
+
+    // ProcessFinished
+    QObject::connect(choosenScheduler, &Scheduler::ProcessFinished, [table](int processID,int waitingTime, int TurnaroundTime) {
+        qDebug() << "finished";
+        QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
+        if (TurnarounIitem) {
+            TurnarounIitem->setText(QString::number(TurnaroundTime));
+        }
+
+        QTableWidgetItem* waitingItem = table->item(processID, 5);
+        if (waitingItem) {
+            waitingItem->setText(QString::number(waitingTime));
         }
     });
 
