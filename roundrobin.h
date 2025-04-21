@@ -1,32 +1,43 @@
-#ifndef ROUNDROBIN_H
-#define ROUNDROBIN_H
-
+#pragma once
 #include "scheduler.h"
+#include "mainwindow.h"
 #include "process.h"
-#include <vector>
-#include <algorithm>
-#include <deque>
 #include <QTimer>
+#include <deque>
 
 class RoundRobin : public Scheduler
 {
-private:
-    std::vector<Process> processes;
-    std::deque<Process*> arrivedQueue;
-    int timeQ;
-    int totalWaitingTime;
-    int totalTurnaroundTime;
-    QTimer* schedulerTimer;
-    int currentTime;
-    int indexArrived;
-    Process* currentProcess;
-    int remainingExecTimeForProcess;
-
+    Q_OBJECT
 public:
-    explicit RoundRobin(QObject *parent, std::vector<Process> processes, int timeQ);
+    RoundRobin(QObject *parent, std::vector<Process> Processes, int quantum);
     ~RoundRobin();
-    void schedule() override;
-    void addNewProcess(Process* p) override;
-};
+    static std::deque<Process*> ready;
+    static std::deque<Process*> mainqueue;
 
-#endif // ROUNDROBIN_H
+
+public slots:
+    void schedule() override;
+    static void addProcessRR(Process* p);
+    void addNewProcessRR(Process *P);
+
+
+private:
+    void Roundrobin(int Q);
+    void checkArrival();
+    // void incrementTime();
+    // void stopwatch();
+    // void startArrivalThread();
+    // void livetable();
+
+    int current_time = 0;
+    QTimer *timer;
+    int timeQuantum;
+    bool finished = false;
+    //Process* current_process;
+    QVector<bool> added;
+    // static std::mutex queueMutex;
+    // static    std::condition_variable cv;
+
+    // std::atomic<bool> stopwatchRunning = true;
+    // std::thread stopwatchThread;
+};

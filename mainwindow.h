@@ -41,6 +41,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    Process* currentRunningProcess = nullptr;
 
 private:
     Ui::MainWindow *ui;
@@ -53,6 +54,7 @@ private:
     QString scheduler;
 
     std::vector<Process> processes;
+
 
 
     void clearScreen();
@@ -69,6 +71,8 @@ private:
         }
         return false;
     }
+public:
+    Process* getcurrentrunningprocess();
 
 signals:
     void sendNewProcessInfo(Process* process);

@@ -4,8 +4,10 @@ Scheduler::Scheduler(QObject *parent,  std::vector<Process> Processes)
     : QObject{parent}, Processes(std::move(Processes))
 {
     qInfo() << this << "constructed" << QThread::currentThread();
+
 }
 
+Process* Scheduler::current_process = nullptr;
 void Scheduler::waitOneSecond()
 {
     QElapsedTimer timer;

@@ -117,6 +117,9 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
         int i = 0;
         for (ProcessWidget* widget : processWidgets) {
+            if(this->scheduler=="Round Robin"){
+                RoundRobin::addProcessRR(new Process(widget->getProcess()));
+            }
             processes.push_back(widget->getProcess());
 
         }
@@ -148,6 +151,11 @@ MainWindow::~MainWindow()
     }
     delete ui;
 
+}
+
+Process* MainWindow::getcurrentrunningprocess() {
+    if (MainWindow::processes.empty()) return nullptr;
+    return Scheduler::current_process;  // Return a pointer to the first process
 }
 
 
@@ -227,11 +235,56 @@ void MainWindow::visualizeProcesses()
     mainLayout->addWidget(view); // Add scene to the layout
 
     // Example: Function to add a rectangle every second (you'll call this via QTimer)
-    auto addRectangleToScene = [scene]() {
+    // auto addRectangleToScene = [scene]() {
+    //     static int x = 0;
+    //     QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
+    //     x += 60;
+    // };
+    auto addRectangleToScene = [scene, this]() {
         static int x = 0;
-        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
-        x += 60;
+        static int currentTime = 0;
+
+        // Decide whether a process is running — if not, show idle
+        QString displayText = "Idle";
+        int runningPid = -1;
+
+        if (getcurrentrunningprocess() != nullptr) {
+            Process* runningProcess = getcurrentrunningprocess();
+            int runningPid = runningProcess->getProcessNumber();
+            displayText = QString("P%1").arg(runningPid);
+        }
+
+        // Create rectangle
+        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::cyan));
+
+        // Time label in small font (top-left)
+        QGraphicsTextItem* timeText = scene->addText(QString::number(currentTime));
+        QFont smallFont = timeText->font();
+        smallFont.setPointSize(7);
+        timeText->setFont(smallFont);
+        timeText->setDefaultTextColor(Qt::black);
+        timeText->setPos(x + 2, 0);
+
+        // Process ID or Idle label (centered)
+        QGraphicsTextItem* pidText = scene->addText(displayText);
+        QFont pidFont = pidText->font();
+        pidFont.setPointSize(10);
+        pidFont.setBold(true);
+        pidText->setFont(pidFont);
+        pidText->setDefaultTextColor(Qt::black);
+
+        // Center it inside the rectangle
+        QRectF rectBounds = rect->rect();
+        QRectF textBounds = pidText->boundingRect();
+        qreal centerX = x + (rectBounds.width() - textBounds.width()) / 2;
+        qreal centerY = (rectBounds.height() - textBounds.height()) / 2;
+        pidText->setPos(centerX, centerY);
+
+        // Prepare for next tick
+        x += 55;
+        currentTime++;
     };
+
 
     QTimer *rectTimer = new QTimer(this);
     connect(rectTimer, &QTimer::timeout, addRectangleToScene);
@@ -388,10 +441,13 @@ void MainWindow::visualizeProcesses()
     // now we get to the part where we visualize the scheduling of the process.
 
     Scheduler* choosenScheduler;
+    RoundRobin *RR;
     // assign the choosenScheduler
     if (this->scheduler == "Round Robin") {
         qDebug() << "round robin";
-        choosenScheduler = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+        RR = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+        choosenScheduler=RR;
+        connect (this,&MainWindow::sendNewProcessInfo,RR,&RoundRobin::addNewProcessRR);
     }
 
     this->schedulingThread = new QThread(this);

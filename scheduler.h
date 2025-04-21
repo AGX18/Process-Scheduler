@@ -26,7 +26,7 @@ public:
      * the function that changes the data and
      * send a signal to the main Window to reflect those changes in the shown screen
      */
-
+    static Process* current_process;
     /**
      * @brief waitOneSecond
      * you can use this function or just add `QThread::currentThread()->msleep(1000);`
