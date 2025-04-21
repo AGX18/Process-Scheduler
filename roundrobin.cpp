@@ -17,7 +17,7 @@ RoundRobin::RoundRobin(QObject *parent, std::vector<Process> Processes, int quan
 
 std::deque<Process*> RoundRobin::mainqueue;
 std::deque<Process*> RoundRobin::ready;
-Process* Scheduler::running_process = nullptr;
+
 RoundRobin::~RoundRobin() {
     qDebug() << "RoundRobin destructor";
 }
