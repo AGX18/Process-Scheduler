@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *startBtn = new QPushButton("Start", this);
 
 
-     QHBoxLayout *headerLayout = new QHBoxLayout;
+    QHBoxLayout *headerLayout = new QHBoxLayout;
 
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
@@ -155,7 +155,7 @@ MainWindow::~MainWindow()
 
 Process* MainWindow::getcurrentrunningprocess() {
     if (MainWindow::processes.empty()) return nullptr;
-    return Scheduler::current_process;  // Return a pointer to the first process
+    return Scheduler::running_process;  // Return a pointer to the first process
 }
 
 
@@ -301,7 +301,7 @@ void MainWindow::visualizeProcesses()
     // First column : Process ID -> does not change
     for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
         QString value = QString("%1").arg(row);
-         table->setItem(row, 0, new QTableWidgetItem(value));
+        table->setItem(row, 0, new QTableWidgetItem(value));
     }
 
     // Second column : Arrival Time

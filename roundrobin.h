@@ -13,6 +13,8 @@ public:
     ~RoundRobin();
     static std::deque<Process*> ready;
     static std::deque<Process*> mainqueue;
+    // static Process* current_process;
+    //  static Process* running_process;
 
 
 public slots:

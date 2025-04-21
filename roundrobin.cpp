@@ -17,7 +17,7 @@ RoundRobin::RoundRobin(QObject *parent, std::vector<Process> Processes, int quan
 
 std::deque<Process*> RoundRobin::mainqueue;
 std::deque<Process*> RoundRobin::ready;
-
+Process* Scheduler::running_process = nullptr;
 RoundRobin::~RoundRobin() {
     qDebug() << "RoundRobin destructor";
 }
@@ -95,8 +95,8 @@ void RoundRobin:: Roundrobin(int Q) {
 
 
     int valid = 0;
-
-    while (completed < Processes.size()) {
+    //completed < Processes.size()
+    while (true) {
 
         checkArrival();
         if (ready.empty()) {
@@ -104,21 +104,22 @@ void RoundRobin:: Roundrobin(int Q) {
             waitOneSecond();
             continue;
         }
-        Scheduler::current_process = ready.front();
-        if (valid == timeQuantum && Scheduler::current_process->getRemainingTime() > 0) {
+        current_process = ready.front();
+        if (valid == timeQuantum && current_process->getRemainingTime() > 0) {
             ready.pop_front();
-            ready.push_back(Scheduler::current_process);
-            Scheduler::current_process = ready.front();
+            ready.push_back(current_process);
+            current_process = ready.front();
             valid = 0;
         }
 
 
 
         if (valid < timeQuantum) {
+            running_process=current_process;
             waitOneSecond();
-            Scheduler::current_process->decrementRemainingTime();
-            int rem =Scheduler:: current_process->getRemainingTime();
-            emit dataChanged(Scheduler::current_process->getProcessNumber());
+            current_process->decrementRemainingTime();
+            int rem = current_process->getRemainingTime();
+            emit dataChanged(current_process->getProcessNumber());
 
             qDebug()<<"remaining : " <<rem;
             valid++;
@@ -126,18 +127,21 @@ void RoundRobin:: Roundrobin(int Q) {
             current_time++;
 
 
-            if (Scheduler::current_process->getRemainingTime() == 0) {
+            if (current_process->getRemainingTime() == 0) {
                 ready.pop_front();
-                turnaround_time = current_time - Scheduler::current_process->getArrivalTime();
-                waiting_time = turnaround_time - Scheduler::current_process->getBurstTime();
-                Scheduler::current_process->setTurnaroundTime(turnaround_time);
-                Scheduler::current_process->setWaitingTime(waiting_time);
-                qDebug()<< "P "<<Scheduler::current_process->getProcessNumber()<<"terminated at : "<<current_time;
+                turnaround_time = current_time - current_process->getArrivalTime();
+                waiting_time = turnaround_time - current_process->getBurstTime();
+                current_process->setTurnaroundTime(turnaround_time);
+                current_process->setWaitingTime(waiting_time);
+                emit  ProcessFinished(current_process->getProcessNumber(), waiting_time, turnaround_time);
+
+                current_process=nullptr;
+                running_process=nullptr;
+                //qDebug()<< "P "<<current_process->getProcessNumber()<<"terminated at : "<<current_time;
 
                 avg_turnaround_time += turnaround_time;
                 avg_waiting_time += waiting_time;
                 valid = 0;
-                emit  ProcessFinished(Scheduler::current_process->getProcessNumber(), waiting_time, turnaround_time);
                 completed++;
             }
         }
