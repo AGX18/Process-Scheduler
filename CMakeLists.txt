@@ -20,7 +20,7 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(OSLiveScheduler
+  qt_add_executable(OSLiveScheduler
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 
@@ -30,6 +30,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         scheduler.h scheduler.cpp
         Data.cpp
         roundrobin.h roundrobin.cpp
+        Preemptivepriorityscheduling.cpp
+        Preemptivepriorityscheduling.h
         # fcfs.h fcfs.cpp
 
     )

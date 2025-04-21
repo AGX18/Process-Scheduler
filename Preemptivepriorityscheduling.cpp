@@ -2,15 +2,16 @@
 #include <vector>
 #include "process.h"
 #include "scheduler.h"
+#include "Preemptivepriorityscheduling"
 using namespace std;
 
     int n;
 
     vector<Process*> processes;
 
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < n; i++) {
         int arrival, burst, priority;
-        cin >> arrival >> burst >> priority;
+        std::cin >> arrival >> burst >> priority;
         processes.push_back(new Process(i + 1, arrival, burst, priority));
     }
 
@@ -58,11 +59,5 @@ using namespace std;
     float avg_tat = total_turnaround_time / n;
     float avg_wt = total_waiting_time / n;
 
-    cout << "\nAverage Turnaround Time: " << avg_tat << endl;
-    cout << "Average Waiting Time: " << avg_wt << endl;
-
-    
     for (auto p : processes) delete p;
-
-    return 0;
 
