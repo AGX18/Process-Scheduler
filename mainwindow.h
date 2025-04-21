@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QTableWidget>
 #include <QHeaderView>
+#include "roundrobin.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -40,6 +41,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    Process* currentRunningProcess = nullptr;
 
 private:
     Ui::MainWindow *ui;
@@ -47,9 +49,12 @@ private:
     // QPushButton *startBtn;
     int timeQuantum;
 
+    QThread* schedulingThread;
+
     QString scheduler;
 
     std::vector<Process> processes;
+
 
 
     void clearScreen();
@@ -66,6 +71,8 @@ private:
         }
         return false;
     }
+public:
+    Process* getcurrentrunningprocess();
 
 signals:
     void sendNewProcessInfo(Process* process);

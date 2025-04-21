@@ -4,7 +4,11 @@ Scheduler::Scheduler(QObject *parent,  std::vector<Process> Processes)
     : QObject{parent}, Processes(std::move(Processes))
 {
     qInfo() << this << "constructed" << QThread::currentThread();
+
 }
+
+Process* Scheduler::current_process = nullptr;
+Process* Scheduler::running_process = nullptr;
 
 void Scheduler::waitOneSecond()
 {
@@ -23,4 +27,5 @@ Scheduler::~Scheduler()
 void Scheduler::addNewProcess(Process* p)
 {
     this->Processes.emplace_back(*p);
+    qDebug() << p->getProcessNumber() << "adding a new process";
 }

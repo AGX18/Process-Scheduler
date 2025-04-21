@@ -26,7 +26,8 @@ public:
      * the function that changes the data and
      * send a signal to the main Window to reflect those changes in the shown screen
      */
-
+    static Process* current_process;
+    static Process* running_process;
     /**
      * @brief waitOneSecond
      * you can use this function or just add `QThread::currentThread()->msleep(1000);`
@@ -42,12 +43,12 @@ signals:
      */
     void dataChanged(int processID);
     void ProcessFinished(int processID,int waitingTime, int TurnaroundTime);
-// emit datachanged(Processid);
-// emit ProcessFinshed(pid, waitingtime, turnaround time)
+    // emit datachanged(Processid);
+    // emit ProcessFinshed(pid, waitingtime, turnaround time)
 
 public slots:
     virtual void schedule() = 0;
-    void addNewProcess(Process* p);
+    virtual void addNewProcess(Process* p);
 
 };
 

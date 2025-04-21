@@ -9,24 +9,25 @@ public:
     int getProcessNumber();
 
 
-    int getArrivalTime();
+    int getArrivalTime() const;
+
 
     void setArrivalTime(int arrivalTime);
 
 
-    int getBurstTime();
+    int getBurstTime() const;
 
     void setBurstTime(int burstTime);
 
-    int getRemainingTime();
+    int getRemainingTime() const;
 
     void setRemainingTime(int remainingTime);
 
-    int getTurnaroundTime();
+    int getTurnaroundTime() const;
 
     void setTurnaroundTime(int turnaroundTime);
 
-    int getWaitingTime();
+    int getWaitingTime() const;
 
     void setWaitingTime(int waitingTime);
 

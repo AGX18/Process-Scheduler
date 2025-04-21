@@ -22,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox->addItem("Priorty non-Preemptive");
     comboBox->addItem("Round Robin");
 
-    QSpinBox* timeQ;
-    QLabel* label;
+    QSpinBox* timeQ = nullptr;
+    QLabel* label = nullptr;
 
     this->scheduler = comboBox->itemText(0);
 
@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *startBtn = new QPushButton("Start", this);
 
 
-     QHBoxLayout *headerLayout = new QHBoxLayout;
+    QHBoxLayout *headerLayout = new QHBoxLayout;
 
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
@@ -86,10 +86,14 @@ MainWindow::MainWindow(QWidget *parent)
                 });
             }
         } else {
-            timeQ->deleteLater();
-            label->deleteLater();
-            label = nullptr;
-            timeQ = nullptr;
+            if (timeQ != nullptr) {
+                timeQ->deleteLater();
+                timeQ = nullptr;
+            }
+            if (label != nullptr) {
+                label->deleteLater();
+                label = nullptr;
+            }
         }
     });
 
@@ -113,6 +117,9 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
         int i = 0;
         for (ProcessWidget* widget : processWidgets) {
+            if(this->scheduler=="Round Robin"){
+                RoundRobin::addProcessRR(new Process(widget->getProcess()));
+            }
             processes.push_back(widget->getProcess());
 
         }
@@ -138,7 +145,17 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    if (schedulingThread && schedulingThread->isRunning()) {
+        schedulingThread->quit();
+        schedulingThread->wait();
+    }
     delete ui;
+
+}
+
+Process* MainWindow::getcurrentrunningprocess() {
+    if (MainWindow::processes.empty()) return nullptr;
+    return Scheduler::running_process;  // Return a pointer to the first process
 }
 
 
@@ -218,11 +235,56 @@ void MainWindow::visualizeProcesses()
     mainLayout->addWidget(view); // Add scene to the layout
 
     // Example: Function to add a rectangle every second (you'll call this via QTimer)
-    auto addRectangleToScene = [scene]() {
+    // auto addRectangleToScene = [scene]() {
+    //     static int x = 0;
+    //     QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
+    //     x += 60;
+    // };
+    auto addRectangleToScene = [scene, this]() {
         static int x = 0;
-        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
-        x += 60;
+        static int currentTime = 0;
+
+        // Decide whether a process is running — if not, show idle
+        QString displayText = "Idle";
+        int runningPid = -1;
+
+        if (getcurrentrunningprocess() != nullptr) {
+            Process* runningProcess = getcurrentrunningprocess();
+            int runningPid = runningProcess->getProcessNumber();
+            displayText = QString("P%1").arg(runningPid);
+        }
+
+        // Create rectangle
+        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::cyan));
+
+        // Time label in small font (top-left)
+        QGraphicsTextItem* timeText = scene->addText(QString::number(currentTime));
+        QFont smallFont = timeText->font();
+        smallFont.setPointSize(7);
+        timeText->setFont(smallFont);
+        timeText->setDefaultTextColor(Qt::black);
+        timeText->setPos(x + 2, 0);
+
+        // Process ID or Idle label (centered)
+        QGraphicsTextItem* pidText = scene->addText(displayText);
+        QFont pidFont = pidText->font();
+        pidFont.setPointSize(10);
+        pidFont.setBold(true);
+        pidText->setFont(pidFont);
+        pidText->setDefaultTextColor(Qt::black);
+
+        // Center it inside the rectangle
+        QRectF rectBounds = rect->rect();
+        QRectF textBounds = pidText->boundingRect();
+        qreal centerX = x + (rectBounds.width() - textBounds.width()) / 2;
+        qreal centerY = (rectBounds.height() - textBounds.height()) / 2;
+        pidText->setPos(centerX, centerY);
+
+        // Prepare for next tick
+        x += 55;
+        currentTime++;
     };
+
 
     QTimer *rectTimer = new QTimer(this);
     connect(rectTimer, &QTimer::timeout, addRectangleToScene);
@@ -239,7 +301,7 @@ void MainWindow::visualizeProcesses()
     // First column : Process ID -> does not change
     for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
         QString value = QString("%1").arg(row);
-         table->setItem(row, 0, new QTableWidgetItem(value));
+        table->setItem(row, 0, new QTableWidgetItem(value));
     }
 
     // Second column : Arrival Time
@@ -348,7 +410,6 @@ void MainWindow::visualizeProcesses()
             // emit the info
             emit sendNewProcessInfo(new Process(row, liveProcess->getArrivalTime(), liveProcess->getBurstTime(), liveProcess->getPriority()));
 
-
             liveProcess->deleteLater();
             liveProcess = new ProcessWidget(this, havePriority(this->scheduler));
             rightLayout->addWidget(liveProcess);
@@ -379,18 +440,51 @@ void MainWindow::visualizeProcesses()
 
     // now we get to the part where we visualize the scheduling of the process.
 
-    // Scheduler* choosenScheduler;
-    // // assign the choosenScheduler
-    // switch (this->scheduler) {
+    Scheduler* choosenScheduler;
+    RoundRobin *RR;
+    // assign the choosenScheduler
+    if (this->scheduler == "Round Robin") {
+        qDebug() << "round robin";
+        RR = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+        choosenScheduler=RR;
+        connect (this,&MainWindow::sendNewProcessInfo,RR,&RoundRobin::addNewProcessRR);
+    }
 
-    // }
-
-    // QThread schedulingThread;
-    // schedulingThread.setObjectName("Scheduling Thread");
-    // choosenScheduler->moveToThread(&schedulingThread);
-    // QObject::connect(&schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
+    this->schedulingThread = new QThread(this);
+    schedulingThread->setObjectName("Scheduling Thread");
+    choosenScheduler->moveToThread(this->schedulingThread);
+    QObject::connect(schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
 
     // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
     // and sendNewProcess
+    QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
+
+    QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
+        qDebug() << "decrementing";
+        QTableWidgetItem* item = table->item(processID, 3);
+        if (item) {
+            int value = item->text().toInt();
+            item->setText(QString::number(value - 1));
+        }
+    });
+
+    // ProcessFinished
+    QObject::connect(choosenScheduler, &Scheduler::ProcessFinished, [table](int processID,int waitingTime, int TurnaroundTime) {
+        qDebug() << "finished";
+        QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
+        if (TurnarounIitem) {
+            TurnarounIitem->setText(QString::number(TurnaroundTime));
+        }
+
+        QTableWidgetItem* waitingItem = table->item(processID, 5);
+        if (waitingItem) {
+            waitingItem->setText(QString::number(waitingTime));
+        }
+    });
+
+    connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
+
+
+    schedulingThread->start();
 
 }
