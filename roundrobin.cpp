@@ -89,7 +89,6 @@ float avg_turnaround_time = 0;
 int turnaround_time = 0;
 int waiting_time = 0;
 
-
 void RoundRobin:: Roundrobin(int Q) {
 
     qDebug() << "number of processes : " << mainqueue.size();
