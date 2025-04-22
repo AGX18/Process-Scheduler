@@ -6,66 +6,68 @@ PreemptivePriorityScheduler::PreemptivePriorityScheduler(QObject *parent, std::v
 {
     qInfo() << this << "constructed Preemptive Priority Scheduler";
 }
-
 void PreemptivePriorityScheduler::schedule()
 {
     while (!Processes.empty()) {
-        // ترتيب العمليات حسب الأولوية (الأعلى أولوية أولاً)
         sortProcessesByPriority();
 
         Process* processToRun = nullptr;
 
-        // محاولة العثور على العملية التي يجب تشغيلها الآن
         for (auto& process : Processes) {
             if (process.getArrivalTime() <= currentTime && process.getRemainingTime() > 0) {
-                if (processToRun == nullptr || process.getPriority() > processToRun->getPriority()) {
+                if (processToRun == nullptr || process.getPriority() < processToRun->getPriority()) {
                     processToRun = &process;
                 }
             }
         }
 
         if (processToRun != nullptr) {
-            // قم بتشغيل العملية
+            // تشغيل العملية
             processToRun->decrementRemainingTime();
 
             if (processToRun->getRemainingTime() == 0) {
-                processToRun->setFinishTime(currentTime);
+                processToRun->setFinishTime(currentTime + 1);  // تحديث وقت الانتهاء
                 emit dataChanged(processToRun->getProcessNumber());
                 emit ProcessFinished(processToRun->getProcessNumber(), processToRun->getWaitingTime(), processToRun->getTurnaroundTime());
+                // لا نقوم بحذف العملية الآن
+            } else {
+                emit dataChanged(processToRun->getProcessNumber());
             }
 
             currentTime++;
 
-            // استدعاء waitOneSecond لتأخير التنفيذ لمدة ثانية واحدة قبل الانتقال إلى الخطوة التالية
             waitOneSecond();
 
-            checkForArrival(processToRun); // تحقق من أي عمليات جديدة قد وصلت
+            checkForArrival();
             updateWaitingTimes();
+        }
+        else {
+            currentTime++;
+            waitOneSecond();
         }
     }
 }
 
+
 void PreemptivePriorityScheduler::processNext()
 {
-    // فائدة هذه الوظيفة يمكن أن تكون في تنفيذ عملية معينة أو التحكم في الانتقالات
     qInfo() << "Processing next step at time" << currentTime;
 }
 
 void PreemptivePriorityScheduler::sortProcessesByPriority()
 {
     std::sort(Processes.begin(), Processes.end(), [](const Process& a, const Process& b) {
-        return a.getPriority() > b.getPriority(); // ترتيب العمليات حسب الأولوية من الأكبر إلى الأصغر
+        return a.getPriority() < b.getPriority(); // الأقل رقم أعلى أولوية
     });
 }
 
-void PreemptivePriorityScheduler::checkForArrival(Process* process)
+void PreemptivePriorityScheduler::checkForArrival()
 {
-    // تحقق من أن أي عملية وصلت في الوقت الحالي
     for (auto& p : Processes) {
         if (p.getArrivalTime() <= currentTime && p.getRemainingTime() > 0) {
-            // تحديث عملية وصلت
-            p.setWaitingTime(currentTime - p.getArrivalTime());
-            p.setStartTime(currentTime);
+            if (p.getStartTime() == -1) {
+                p.setStartTime(currentTime);
+            }
             emit dataChanged(p.getProcessNumber());
         }
     }

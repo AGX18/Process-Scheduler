@@ -1,8 +1,9 @@
+#ifndef PREEMPTIVEPRIORITYSCHEDULING_H
+#define PREEMPTIVEPRIORITYSCHEDULING_H
 
-#ifndef PREEMPTIVEPRIORITYSCHEDULER_H
-#define PREEMPTIVEPRIORITYSCHEDULER_H
-
-#include "scheduler.h"
+#include "Scheduler.h"
+#include "Process.h"
+#include <vector>
 
 class PreemptivePriorityScheduler : public Scheduler
 {
@@ -10,15 +11,19 @@ class PreemptivePriorityScheduler : public Scheduler
 
 public:
     explicit PreemptivePriorityScheduler(QObject *parent = nullptr, std::vector<Process> Processes = {});
-    void schedule() override;
+
+    void schedule();
     void processNext();
 
 private:
-    int currentTime; // لحساب الوقت الحالي
+    int currentTime;
+    void sortProcessesByPriority();
+    void checkForArrival();
+    void updateWaitingTimes();
 
-    void sortProcessesByPriority(); // ترتيب العمليات حسب الأولوية
-    void checkForArrival(Process* process); // التحقق إذا وصلت عملية جديدة
-    void updateWaitingTimes(); // تحديث أوقات الانتظار
+signals:
+    void dataChanged(int processNumber);
+    void ProcessFinished(int processNumber, int waitingTime, int turnaroundTime);
 };
 
-#endif // PREEMPTIVEPRIORITYSCHEDULER_H
+#endif // PREEMPTIVEPRIORITYSCHEDULING_H

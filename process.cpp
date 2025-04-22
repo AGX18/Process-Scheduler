@@ -84,3 +84,7 @@ void Process::setFinishTime(int newFinishTime)
 int Process::getPriority() const {
     return priority;
 }
+int Process::getProcessNumber() const {
+    return processNumber;
+}
+

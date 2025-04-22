@@ -43,6 +43,8 @@ public:
 
     int getPriority() const;
 
+    int getProcessNumber() const;
+
 private:
     int processNumber;
     int arrivalTime;
