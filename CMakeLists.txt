@@ -30,6 +30,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         scheduler.h scheduler.cpp
         Data.cpp
         roundrobin.h roundrobin.cpp
+        PreemptivePriorityScheduling.cpp
+        PreemptivePriorityScheduling.h
         # fcfs.h fcfs.cpp
 
     )

@@ -27,6 +27,7 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include "roundrobin.h"
+#include "PreemptivePriorityScheduling.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

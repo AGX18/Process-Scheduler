@@ -41,6 +41,8 @@ public:
     int getFinishTime() const;
     void setFinishTime(int newFinishTime);
 
+    int getPriority() const;
+
 private:
     int processNumber;
     int arrivalTime;
