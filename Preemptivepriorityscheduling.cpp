@@ -1,11 +1,13 @@
 #include "PreemptivePriorityScheduling.h"
 #include "process.h"
 #include "mainwindow.h"
+#include <QDebug>
 #include <iostream>
 #include <vector>
 #include <algorithm>
 
-PreemptivePriorityScheduling::PreemptivePriorityScheduling(int n) : n(n), completed(0), time(0), total_waiting_time(0), total_turnaround_time(0) {
+PreemptivePriorityScheduling::PreemptivePriorityScheduling(int n)
+    : n(n), completed(0), time(0), total_waiting_time(0), total_turnaround_time(0) {
     processes.resize(n);
 }
 
@@ -16,58 +18,49 @@ PreemptivePriorityScheduling::~PreemptivePriorityScheduling() {
     processes.clear();
 }
 
+// هنا ممكن تضيف setProcesses كمان لو هتاخد الـ processes من GUI بدال cin
 void PreemptivePriorityScheduling::run() {
-    std::cout << "Running Preemptive Scheduling (Preemptive by Earliest Arrival Time)...\n";
-
-    for (int i = 0; i < n; ++i) {
-        int arrival, burst;
-        std::cout << "Enter arrival time and burst time for process " << i + 1 << ": ";
-        std::cin >> arrival >> burst;
-        processes[i] = new Process(i + 1, arrival, burst, 0); // أولوية افتراضية مش هتستخدم للاختيار
-    }
-
-    int currently_running = -1; // فهرس العملية اللي شغالة حاليًا (-1 لو مفيش)
+    int currently_running = -1;
 
     while (completed < n) {
-        int next_process = -1;
-        int earliest_arrival = 1e9;
+        Process* next_process = getHighestPriorityProcess();
 
-        for (int i = 0; i < n; ++i) {
-            if (processes[i]->getArrivalTime() <= time && processes[i]->getRemainingTime() > 0) {
-                if (processes[i]->getArrivalTime() < earliest_arrival) {
-                    earliest_arrival = processes[i]->getArrivalTime();
-                    next_process = i;
-                }
-            }
-        }
-
-        if (next_process != -1) {
-            if (next_process != currently_running) {
-                if (currently_running != -1 && processes[next_process]->getArrivalTime() < processes[currently_running]->getArrivalTime()) {
-                    // مقاطعة
-                }
-                currently_running = next_process;
-            }
-
-            processes[currently_running]->decrementRemainingTime();
+        if (next_process != nullptr) {
+            // لاقينا process
+            next_process->decrementRemainingTime();
             time++;
 
-            if (processes[currently_running]->getRemainingTime() == 0) {
+            if (next_process->getRemainingTime() == 0) {
                 completed++;
-                processes[currently_running]->setFinishTime(time);
-                processes[currently_running]->setTurnaroundTime(processes[currently_running]->getFinishTime() - processes[currently_running]->getArrivalTime());
-                processes[currently_running]->setWaitingTime(processes[currently_running]->getTurnaroundTime() - processes[currently_running]->getBurstTime());
-                currently_running = -1;
+                next_process->setFinishTime(time);
+                next_process->setTurnaroundTime(next_process->getFinishTime() - next_process->getArrivalTime());
+                next_process->setWaitingTime(next_process->getTurnaroundTime() - next_process->getBurstTime());
+
+                total_turnaround_time += next_process->getTurnaroundTime();
+                total_waiting_time += next_process->getWaitingTime();
             }
         } else {
+            // مفيش ولا process جاهز، نزود الوقت
             time++;
         }
     }
 
-    float avg_tat = total_turnaround_time / n;
-    float avg_wt = total_waiting_time / n;
+    qDebug() << "Average Turnaround Time = " << total_turnaround_time / n;
+    qDebug() << "Average Waiting Time = " << total_waiting_time / n;
+}
 
-    std::cout << "\n--- Results ---\n";
-    std::cout << "Average Turnaround Time: " << avg_tat << std::endl;
-    std::cout << "Average Waiting Time: " << avg_wt << std::endl;
+Process* PreemptivePriorityScheduling::getHighestPriorityProcess() {
+    Process* best = nullptr;
+    int highest_priority = 1e9;
+
+    for (Process* p : processes) {
+        if (p->getArrivalTime() <= time && p->getRemainingTime() > 0) {
+            if (p->getPriority() < highest_priority) {
+                highest_priority = p->getPriority();
+                best = p;
+            }
+        }
+    }
+
+    return best;
 }

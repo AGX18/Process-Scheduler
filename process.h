@@ -21,6 +21,8 @@ public:
 
     int getRemainingTime() const;
 
+    int getPriority() const;
+
     void setRemainingTime(int remainingTime);
 
     int getTurnaroundTime() const;

@@ -80,3 +80,7 @@ void Process::setFinishTime(int newFinishTime)
 {
     finishTime = newFinishTime;
 }
+
+int Process::getPriority() const {
+    return priority;
+}
