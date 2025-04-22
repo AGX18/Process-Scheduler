@@ -13,16 +13,16 @@ public:
     PreemptivePriorityScheduler(QObject *parent, std::vector<Process> Processes);
     ~PreemptivePriorityScheduler() = default;
 
-    void schedule();  // جدولة العمليات
-    void sortProcessesByPriority();  // ترتيب العمليات حسب الأولوية
-    void checkForArrival();  // التحقق من وصول العمليات الجديدة
-    void updateWaitingTimes();  // تحديث أوقات الانتظار
+    void schedule();
+    void sortProcessesByPriority();
+    void checkForArrival();
+    void updateWaitingTimes();
 
 private:
-    int currentTime;
-    int totalWaitingTime;
-    int totalTurnaroundTime;
-    int completedProcesses;
+    int currentTime=0;
+    int totalWaitingTime=0;
+    int totalTurnaroundTime=0;
+    int completedProcesses=0;
 };
 
 #endif // PREEMPTIVEPRIORITYSCHEDULING_H
