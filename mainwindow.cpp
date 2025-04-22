@@ -92,7 +92,14 @@ MainWindow::MainWindow(QWidget *parent)
             if(this->scheduler=="Round Robin"){
                 RoundRobin::addProcessRR(new Process(widget->getProcess()));
             }
+            else if (scheduler == "Priorty Preemptive") {
+                PreemptivePriorityScheduling* pps = new PreemptivePriorityScheduling(this, processes);
+                connect(pps, &PreemptivePriorityScheduling::dataChanged, this, &MainWindow::visualizeProcesses);
+                connect(pps, &PreemptivePriorityScheduling::ProcessFinished, this, &MainWindow::visualizeProcesses);
+                pps->schedule();
+            }
             processes.push_back(widget->getProcess());
+
         }
 
         visualizeProcesses();

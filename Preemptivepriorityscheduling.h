@@ -1,37 +1,31 @@
 #ifndef PREEMPTIVEPRIORITYSCHEDULING_H
 #define PREEMPTIVEPRIORITYSCHEDULING_H
 
+#include "scheduler.h"
 #include "process.h"
 #include <vector>
+#include <deque>
+#include <QObject>
 
-class MainWindow;
+class PreemptivePriorityScheduling : public Scheduler
+{
+    Q_OBJECT
 
-class PreemptivePriorityScheduling {
 public:
-    PreemptivePriorityScheduling(int n);
+    PreemptivePriorityScheduling(QObject *parent, std::vector<Process> Processes);
     ~PreemptivePriorityScheduling();
 
-    void setProcesses(const std::vector<Process*>& new_processes);
-    void run();
-    Process* getHighestPriorityProcess();
+    static std::deque<Process*> mainqueue;
+    static std::deque<Process*> ready;
 
-    // إشارة يتم إطلاقها عند تحديث حالة عملية قيد التشغيل
-
-
-    void setScheduler(MainWindow* schedulerWindow) { this->scheduler = schedulerWindow; }
+    void schedule() override;
+    void addProcess(Process* p);
+    void addNewProcess(Process* p);
 
 private:
-    int n;
-    int completed;
-    int time;
-    float total_waiting_time;
-    float total_turnaround_time;
-    std::vector<Process*> processes;
-    MainWindow* scheduler = nullptr;
-
-signals:
-    void dataChanged(int processId);
-    void ProcessFinished(int processId, int waitingTime, int turnaroundTime);
+    int current_time=0;
+    void checkArrival();
+    void PriorityPreemptive();
 };
 
 #endif // PREEMPTIVEPRIORITYSCHEDULING_H
