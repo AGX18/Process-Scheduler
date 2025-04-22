@@ -1,73 +1,90 @@
 #include "PreemptivePriorityScheduling.h"
 #include <algorithm>
+#include <QDebug>
+#include "mainwindow.h"
 
 PreemptivePriorityScheduler::PreemptivePriorityScheduler(QObject *parent, std::vector<Process> Processes)
-    : Scheduler{parent, std::move(Processes)}, currentTime(0)
+    : Scheduler{parent, std::move(Processes)}, currentTime(0), totalWaitingTime(0), totalTurnaroundTime(0), completedProcesses(0)
 {
     qInfo() << this << "constructed Preemptive Priority Scheduler";
 }
+
 void PreemptivePriorityScheduler::schedule()
 {
-    while (!Processes.empty()) {
-        sortProcessesByPriority();
+    while (completedProcesses < Processes.size()) {
+        sortProcessesByPriority();  // ترتيب العمليات حسب الأولوية
 
         Process* processToRun = nullptr;
 
-        for (auto& process : Processes) {
-            if (process.getArrivalTime() <= currentTime && process.getRemainingTime() > 0) {
-                if (processToRun == nullptr || process.getPriority() < processToRun->getPriority()) {
-                    processToRun = &process;
+        // البحث عن العملية التي سيتم تشغيلها وفقًا لأولويتها
+        for (int i = 0; i < Processes.size(); ++i) {
+            if (Processes[i].getArrivalTime() <= currentTime && Processes[i].getRemainingTime() > 0) {
+                if (processToRun == nullptr || Processes[i].getPriority() < processToRun->getPriority()) {
+                    processToRun = &Processes[i];
                 }
             }
         }
 
+        // إذا وجدنا عملية للعمل عليها
         if (processToRun != nullptr) {
             // تشغيل العملية
             processToRun->decrementRemainingTime();
 
             if (processToRun->getRemainingTime() == 0) {
-                processToRun->setFinishTime(currentTime + 1);  // تحديث وقت الانتهاء
+                // عندما تنتهي العملية، نقوم بحساب أوقات الانتظار و الـ turnaround
+                int turnaroundTime = currentTime + 1 - processToRun->getArrivalTime();
+                int waitingTime = turnaroundTime - processToRun->getBurstTime();
+                processToRun->setTurnaroundTime(turnaroundTime);
+                processToRun->setWaitingTime(waitingTime);
+
+                totalTurnaroundTime += turnaroundTime;
+                totalWaitingTime += waitingTime;
+                completedProcesses++;
+
                 emit dataChanged(processToRun->getProcessNumber());
-                emit ProcessFinished(processToRun->getProcessNumber(), processToRun->getWaitingTime(), processToRun->getTurnaroundTime());
-                // لا نقوم بحذف العملية الآن
+                emit ProcessFinished(processToRun->getProcessNumber(), waitingTime, turnaroundTime);
             } else {
                 emit dataChanged(processToRun->getProcessNumber());
             }
 
+            // زيادة الوقت
             currentTime++;
-
-            waitOneSecond();
-
-            checkForArrival();
-            updateWaitingTimes();
-        }
-        else {
+            waitOneSecond();  // الانتظار ثانية
+            checkForArrival();  // التحقق من الوصول للعمليات الجديدة
+            updateWaitingTimes();  // تحديث أوقات الانتظار
+        } else {
+            // إذا لم توجد عملية تعمل، يكون هناك وقت idle
+            qWarning() << "Idle at time" << currentTime;
             currentTime++;
-            waitOneSecond();
+            waitOneSecond();  // الانتظار ثانية
+            checkForArrival();  // التحقق من الوصول للعمليات الجديدة
+            updateWaitingTimes();  // تحديث أوقات الانتظار
         }
     }
-}
 
+    qInfo() << "All processes finished.";
+    // حساب المتوسطات بعد الانتهاء من جميع العمليات
+    if (completedProcesses > 0) {
+        float avgWaitingTime = static_cast<float>(totalWaitingTime) / completedProcesses;
+        float avgTurnaroundTime = static_cast<float>(totalTurnaroundTime) / completedProcesses;
 
-void PreemptivePriorityScheduler::processNext()
-{
-    qInfo() << "Processing next step at time" << currentTime;
+        qInfo() << "Average waiting time = " << avgWaitingTime;
+        qInfo() << "Average turnaround time = " << avgTurnaroundTime;
+    }
 }
 
 void PreemptivePriorityScheduler::sortProcessesByPriority()
 {
     std::sort(Processes.begin(), Processes.end(), [](const Process& a, const Process& b) {
-        return a.getPriority() < b.getPriority(); // الأقل رقم أعلى أولوية
+        return a.getPriority() < b.getPriority();  // الأقل رقم أعلى أولوية
     });
 }
 
 void PreemptivePriorityScheduler::checkForArrival()
 {
     for (auto& p : Processes) {
-        if (p.getArrivalTime() <= currentTime && p.getRemainingTime() > 0) {
-            if (p.getStartTime() == -1) {
-                p.setStartTime(currentTime);
-            }
+        if (p.getArrivalTime() <= currentTime && p.getRemainingTime() > 0 && p.getStartTime() == -1) {
+            p.setStartTime(currentTime);
             emit dataChanged(p.getProcessNumber());
         }
     }
@@ -76,7 +93,7 @@ void PreemptivePriorityScheduler::checkForArrival()
 void PreemptivePriorityScheduler::updateWaitingTimes()
 {
     for (auto& process : Processes) {
-        if (process.getRemainingTime() > 0 && process.getArrivalTime() <= currentTime) {
+        if (process.getRemainingTime() > 0 && process.getArrivalTime() <= currentTime && process.getStartTime() != -1) {
             process.setWaitingTime(process.getWaitingTime() + 1);
         }
     }

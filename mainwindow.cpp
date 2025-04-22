@@ -513,16 +513,11 @@ void MainWindow::visualizeProcesses()
     schedulingThread1->setObjectName("Scheduling Thread 1");
 
     choosenScheduler1->moveToThread(schedulingThread1);
-
     QObject::connect(schedulingThread1, &QThread::started, choosenScheduler1, &Scheduler::schedule);
 
-    // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
-    // and sendNewProcess
     QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler1, &Scheduler::addNewProcess, Qt::QueuedConnection);
 
-    // dataChanged
     QObject::connect(choosenScheduler1, &Scheduler::dataChanged, [table](int processID) {
-        qDebug() << "decrementing (scheduler1)";
         QTableWidgetItem* item = table->item(processID, 3);
         if (item) {
             int value = item->text().toInt();
@@ -530,9 +525,7 @@ void MainWindow::visualizeProcesses()
         }
     });
 
-    // ProcessFinished
     QObject::connect(choosenScheduler1, &Scheduler::ProcessFinished, [table](int processID, int waitingTime, int TurnaroundTime) {
-        qDebug() << "finished (scheduler1)";
         QTableWidgetItem* TurnaroundItem = table->item(processID, 4);
         if (TurnaroundItem) {
             TurnaroundItem->setText(QString::number(TurnaroundTime));
@@ -544,7 +537,6 @@ void MainWindow::visualizeProcesses()
         }
     });
 
-    // لما يخلص الثريد
     connect(schedulingThread1, &QThread::finished, choosenScheduler1, &QObject::deleteLater);
 
     schedulingThread1->start();
