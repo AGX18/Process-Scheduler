@@ -18,7 +18,11 @@ PreemptivePriorityScheduling::~PreemptivePriorityScheduling() {
     processes.clear();
 }
 
-// هنا ممكن تضيف setProcesses كمان لو هتاخد الـ processes من GUI بدال cin
+// دالة لتعيين العمليات من واجهة المستخدم
+void PreemptivePriorityScheduling::setProcesses(const std::vector<Process*>& new_processes) {
+    processes = new_processes;
+}
+
 void PreemptivePriorityScheduling::run() {
     int currently_running = -1;
 
@@ -45,8 +49,11 @@ void PreemptivePriorityScheduling::run() {
         }
     }
 
-    qDebug() << "Average Turnaround Time = " << total_turnaround_time / n;
-    qDebug() << "Average Waiting Time = " << total_waiting_time / n;
+    // حساب المتوسطات
+    if (n > 0) {
+        qDebug() << "Average Turnaround Time = " << total_turnaround_time / n;
+        qDebug() << "Average Waiting Time = " << total_waiting_time / n;
+    }
 }
 
 Process* PreemptivePriorityScheduling::getHighestPriorityProcess() {
