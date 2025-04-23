@@ -128,7 +128,7 @@ MainWindow::MainWindow(QWidget *parent)
         for (ProcessWidget* widget : processWidgets) {
             if (this->scheduler == "Priority Preemptive") {
                 PreemptivePriorityScheduler* PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
-                PPS->addNewProcess(new Process(widget->getProcess()));  // إضافة العملية إلى الجدول الزمني
+                PPS->addNewProcessPPS(new Process(widget->getProcess()));
             }
 
             processes.push_back(widget->getProcess());
@@ -515,9 +515,9 @@ void MainWindow::visualizeProcesses()
     choosenScheduler1->moveToThread(schedulingThread1);
     QObject::connect(schedulingThread1, &QThread::started, choosenScheduler1, &Scheduler::schedule);
 
-    QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler1, &Scheduler::addNewProcess, Qt::QueuedConnection);
-
+    // Connect signals like you did for RoundRobin
     QObject::connect(choosenScheduler1, &Scheduler::dataChanged, [table](int processID) {
+        qDebug() << "decrementing (priority)";
         QTableWidgetItem* item = table->item(processID, 3);
         if (item) {
             int value = item->text().toInt();
@@ -526,9 +526,10 @@ void MainWindow::visualizeProcesses()
     });
 
     QObject::connect(choosenScheduler1, &Scheduler::ProcessFinished, [table](int processID, int waitingTime, int TurnaroundTime) {
-        QTableWidgetItem* TurnaroundItem = table->item(processID, 4);
-        if (TurnaroundItem) {
-            TurnaroundItem->setText(QString::number(TurnaroundTime));
+        qDebug() << "finished (priority)";
+        QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
+        if (TurnarounIitem) {
+            TurnarounIitem->setText(QString::number(TurnaroundTime));
         }
 
         QTableWidgetItem* waitingItem = table->item(processID, 5);
@@ -541,6 +542,7 @@ void MainWindow::visualizeProcesses()
 
     schedulingThread1->start();
     }
+
 
 
 }
