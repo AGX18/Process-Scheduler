@@ -356,7 +356,7 @@ void MainWindow::visualizeProcesses()
 
             // emit the info
             emit sendNewProcessInfo(new Process(row, liveProcess->getArrivalTime(), liveProcess->getBurstTime(), liveProcess->getPriority()));
-
+            // TODO: the new process arrival time must not be less than the currentTime
             liveProcess->deleteLater();
             liveProcess = new ProcessWidget(this, havePriority(this->scheduler));
             rightLayout->addWidget(liveProcess);

@@ -85,6 +85,7 @@ void RoundRobin::addNewProcess(Process *p)
 {
     qDebug() << "Adding a new Process" << p->getProcessNumber();
     processes.push_back(*p);  // Add the new process to the list
-
-
+    std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
+        return a.getArrivalTime() < b.getArrivalTime();
+    });
 }
