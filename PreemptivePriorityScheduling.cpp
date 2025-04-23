@@ -98,7 +98,7 @@ void PreemptivePriorityScheduler::preemptivePriorityScheduling(int Q) {
         }
 
         if (valid < timeQuantum) {
-            running_process = Scheduler::current_process;
+            Scheduler::running_process = Scheduler::current_process;
             waitOneSecond();
             Scheduler::current_process->decrementRemainingTime();
             int rem =Scheduler:: current_process->getRemainingTime();
@@ -118,7 +118,7 @@ void PreemptivePriorityScheduler::preemptivePriorityScheduling(int Q) {
                 emit ProcessFinished(Scheduler::current_process->getProcessNumber(), waiting_time, turnaround_time);
 
                 Scheduler::current_process = nullptr;
-                running_process = nullptr;
+                Scheduler::running_process = nullptr;
 
                 totalTurnaroundTime += turnaround_time;
                 totalWaitingTime += waiting_time;
