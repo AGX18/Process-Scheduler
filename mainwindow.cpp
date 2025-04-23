@@ -343,6 +343,11 @@ void MainWindow::visualizeProcesses()
     });
     stopwatch->start(1000);
 
+    // Stop button
+    QPushButton *stopButton = new QPushButton("Stop Simulation", this);
+    rightLayout->addWidget(stopButton);
+
+
     // Arrival Time Widget
     QSpinBox *arrivalSpin = new QSpinBox(this);
     arrivalSpin->setRange(0, 1000);
@@ -520,5 +525,54 @@ void MainWindow::visualizeProcesses()
 
 
     schedulingThread->start();
+
+    connect(stopButton, &QPushButton::clicked, [this, stopwatch,rightLayout, choosenScheduler, table]() {
+        // Stop the timer
+        stopwatch->stop();
+
+        // Stop the scheduler thread
+        if (this->schedulingThread && this->schedulingThread->isRunning()) {
+            this->schedulingThread->quit();
+            this->schedulingThread->wait();
+        }
+
+        // Disable any further updates (e.g., stop adding rectangles)
+        // (In your case, you'd want to disconnect any active signal-slot connections that are updating the UI.)
+
+        // Calculate Average Turnaround and Waiting Time
+        double totalTurnaroundTime = 0;
+        double totalWaitingTime = 0;
+        int countTurnaround = 0;
+        int countWaiting = 0;
+
+        // Traverse the table to collect relevant data
+        for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
+            // Turnaround Time (column 4)
+            QTableWidgetItem *turnaroundItem = table->item(row, 4);
+            if (turnaroundItem && turnaroundItem->text() != "-1") {
+                totalTurnaroundTime += turnaroundItem->text().toDouble();
+                countTurnaround++;
+            }
+
+            // Waiting Time (column 5)
+            QTableWidgetItem *waitingItem = table->item(row, 5);
+            if (waitingItem && waitingItem->text() != "-1") {
+                totalWaitingTime += waitingItem->text().toDouble();
+                countWaiting++;
+            }
+        }
+
+        // Calculate averages
+        double avgTurnaroundTime = (countTurnaround > 0) ? (totalTurnaroundTime / countTurnaround) : 0;
+        double avgWaitingTime = (countWaiting > 0) ? (totalWaitingTime / countWaiting) : 0;
+
+        // Create Labels for the averages
+        QLabel *avgTurnaroundLabel = new QLabel(QString("Average Turnaround Time: %1").arg(avgTurnaroundTime), this);
+        QLabel *avgWaitingLabel = new QLabel(QString("Average Waiting Time: %1").arg(avgWaitingTime), this);
+
+        // Display the labels
+        rightLayout->addWidget(avgTurnaroundLabel);
+        rightLayout->addWidget(avgWaitingLabel);
+    });
 
 }
