@@ -21,6 +21,7 @@ protected:
 
 public:
     explicit Scheduler(QObject *parent = nullptr, std::vector<Process> Processes = {});
+    static QString SchedulerRR;
     /**
      * @brief schedule
      * the function that changes the data and

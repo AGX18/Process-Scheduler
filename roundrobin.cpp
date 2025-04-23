@@ -1,93 +1,143 @@
 #include "roundrobin.h"
+#include <QDebug>
+#include <thread>
+#include "mainwindow.h"
 
-RoundRobin::RoundRobin(QObject *parent, std::vector<Process> processes, int timeQ)
-    : Scheduler{parent}, processes(processes), timeQ(timeQ), totalWaitingTime(0)
-    , totalTurnaroundTime(0), currentProcess(nullptr), remainingExecTimeForProcess(0), currentTime(0), indexArrived(0)
-{
-    // sort them in ascending order according to the arrival time
-    std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
-        return a.getArrivalTime() < b.getArrivalTime();
+RoundRobin::RoundRobin(QObject *parent, std::vector<Process> Processes, int quantum)
+    : Scheduler(parent, Processes) {
+    added.resize(Processes.size(), false);
+    this->timeQuantum = quantum;
+
+    std::sort(mainqueue.begin(), mainqueue.end(), [](Process* a, Process* b) {
+        return a->getArrivalTime() < b->getArrivalTime();
     });
 
-    this->schedulerTimer = new QTimer(this);
-    // QThread::sleep(1);  // Sleep for 1 second
-    connect(schedulerTimer, &QTimer::timeout, this, &RoundRobin::schedule, Qt::QueuedConnection);
 
-    schedulerTimer->start(1000);  // 1 second interval
 }
 
-RoundRobin::~RoundRobin()
-{
-    delete this->schedulerTimer;
-    // Make sure to delete any dynamically allocated processes (if any) here to avoid memory leaks
+std::deque<Process*> RoundRobin::mainqueue;
+std::deque<Process*> RoundRobin::ready;
+Process* RoundRobin::current_process=nullptr;
+Process* RoundRobin::running_process=nullptr;
+
+RoundRobin::~RoundRobin() {
+    qDebug() << "RoundRobin destructor";
 }
 
-void RoundRobin::schedule() {
-    qDebug() << "Scheduler tick! Current time: " << this->currentTime;
-
-
-    // Check if a process has arrived
-    for (int i = indexArrived; i < processes.size(); ++i) {
-        if (processes[i].getArrivalTime() <= this->currentTime) {
-            qDebug() << processes[i].getArrivalTime();
-            qDebug() << processes[i].getBurstTime();
-
-            arrivedQueue.push_back(new Process(processes[i]));
-            indexArrived++;
-        } else {
-            break;  // Since processes are sorted by arrival time
-        }
+void RoundRobin::checkArrival() {
+    while (!mainqueue.empty()) {
+        Process* P = mainqueue.front();
+        if (P->getArrivalTime() <= current_time) {
+            ready.push_back(P);
+            // qDebug()<< "P "<<current_process->getProcessNumber()<<" ready at : "<<current_time;
+            mainqueue.pop_front(); }
+        else {
+            break; }
     }
-
-    // If no process has arrived and there is no process that is running , do nothing
-    if (arrivedQueue.empty() && this->currentProcess == nullptr) {
-        this->currentTime++;
-        emit dataChanged(-1);
-        return;
-    }
-
-    // Check if a process has been chosen or if we need to pick a new one
-    if (this->currentProcess == nullptr || this->remainingExecTimeForProcess == 0) {
-        // If the current process still has remaining time, move it back to the arrived queue
-        if (this->currentProcess != nullptr && this->currentProcess->getRemainingTime() != 0) {
-            arrivedQueue.push_back(this->currentProcess);  // Do not delete the current process here!
-        }
-
-        // Assign a new process from the arrived queue
-        if (!arrivedQueue.empty()) {
-            this->currentProcess = arrivedQueue.front();
-            arrivedQueue.pop_front();
-            this->remainingExecTimeForProcess = this->timeQ;  // Reset the time quantum
-        }
-
-    }
-
-    // Emit signal to update data
-    emit dataChanged(this->currentProcess->getProcessNumber());
-    qDebug() << "decrementing the remaining time of the process: P" << this->currentProcess->getProcessNumber();
-    // Decrement the process's remaining time and the time quantum
-    this->currentProcess->decrementRemainingTime();
-    qDebug() << "remaining time is: " << this->currentProcess->getRemainingTime();
-    this->remainingExecTimeForProcess--;
-
-    // If the process has finished, calculate turnaround and waiting times
-    if (this->currentProcess->getRemainingTime() == 0) {
-        int turnaround = (this->currentTime + 1)- this->currentProcess->getArrivalTime();
-        int waiting = turnaround - this->currentProcess->getBurstTime();
-        this->totalWaitingTime += waiting;
-        this->totalTurnaroundTime += turnaround;
-        emit ProcessFinished(this->currentProcess->getProcessNumber(), waiting, turnaround);
-        this->currentProcess = nullptr;
-    }
-
-    this->currentTime++;  // Increment the clock
 }
 
-void RoundRobin::addNewProcess(Process *p)
-{
-    qDebug() << "Adding a new Process" << p->getProcessNumber();
-    processes.push_back(*p);  // Add the new process to the list
-    std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
-        return a.getArrivalTime() < b.getArrivalTime();
+
+void RoundRobin:: schedule() {
+    std::thread t(&RoundRobin::Roundrobin, this, timeQuantum);
+    t.detach();
+
+}
+
+void RoundRobin::addProcessRR(Process* p) {
+
+    mainqueue.push_back(p);
+
+}
+
+void RoundRobin::addNewProcessRR(Process* p) {
+    qDebug() << "new process added : " << p->getProcessNumber();
+
+    mainqueue.push_back(p);
+
+    std::sort(mainqueue.begin(), mainqueue.end(), [](Process* a, Process* b) {
+        return a->getArrivalTime() < b->getArrivalTime();
     });
+    // Processes.push_back(*p);
+
+}
+
+int completed = 0;
+float avg_waiting_time = 0;
+float avg_turnaround_time = 0;
+int turnaround_time = 0;
+int waiting_time = 0;
+int pid=-1;
+void RoundRobin:: Roundrobin(int Q) {
+
+    // checkArrival();
+    // if (!ready.empty()) {
+    //     current_process = ready.front();
+    //     running_process = current_process;
+    //     pid = current_process->getProcessNumber();
+    //     emit dataChanged(pid);
+    // }
+
+    int valid = 0;
+    //completed < Processes.size()
+    while (true) {
+
+        checkArrival();
+        if (ready.empty()) {
+            pid=-1;
+            emit dataChanged(pid);
+            current_time++;
+            waitOneSecond();
+            continue;
+        }
+        current_process = ready.front();
+        if (valid == timeQuantum && current_process->getRemainingTime() > 0) {
+            ready.pop_front();
+            ready.push_back(current_process);
+            current_process = ready.front();
+            valid = 0;
+        }
+
+
+
+        if (valid < timeQuantum) {
+            running_process=current_process;
+            current_process->decrementRemainingTime();
+            int rem = current_process->getRemainingTime();
+            pid=current_process->getProcessNumber();
+            emit dataChanged(pid);
+
+            qDebug()<<"remaining : " <<rem;
+            valid++;
+            current_time++;
+            waitOneSecond();
+
+
+            if (current_process->getRemainingTime() == 0) {
+                ready.pop_front();
+                turnaround_time = current_time - current_process->getArrivalTime();
+                waiting_time = turnaround_time - current_process->getBurstTime();
+                current_process->setTurnaroundTime(turnaround_time);
+                current_process->setWaitingTime(waiting_time);
+                emit  ProcessFinished(current_process->getProcessNumber(), waiting_time, turnaround_time);
+
+                current_process=nullptr;
+                running_process=nullptr;
+                pid=-1;
+                //qDebug()<< "P "<<current_process->getProcessNumber()<<"terminated at : "<<current_time;
+
+                avg_turnaround_time += turnaround_time;
+                avg_waiting_time += waiting_time;
+                valid = 0;
+                completed++;
+            }
+
+
+
+        }
+
+
+
+    }
+    // qDebug() << "Average waiting time = " << avg_waiting_time / Processes.size();
+    // qDebug() << "Average turnaround time = " << avg_turnaround_time / Processes.size();
 }

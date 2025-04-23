@@ -73,6 +73,8 @@ MainWindow::MainWindow(QWidget *parent)
     // connect()
     connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable{
         this->scheduler = choice;
+        Scheduler::SchedulerRR=scheduler;
+
         qDebug() << this->scheduler;
         if (scheduler == "Round Robin") {
             if (timeQ == nullptr) {
@@ -117,6 +119,8 @@ MainWindow::MainWindow(QWidget *parent)
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
         int i = 0;
         for (ProcessWidget* widget : processWidgets) {
+            if(this->scheduler=="Round Robin")
+                RoundRobin::addProcessRR(new Process(widget->getProcess()));
             processes.push_back(widget->getProcess());
 
         }
