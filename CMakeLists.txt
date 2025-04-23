@@ -32,8 +32,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         roundrobin.h roundrobin.cpp
 
         fcfs.cpp fcfs.h
-        # fcfs.h fcfs.cpp
-
+        sjfnonpreemptive.h sjfnonpreemptive.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET OSLiveScheduler APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

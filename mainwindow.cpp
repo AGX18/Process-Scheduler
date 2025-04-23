@@ -394,6 +394,8 @@ void MainWindow::visualizeProcesses()
         choosenScheduler = new RoundRobin(nullptr, this->processes, this->timeQuantum);
     } else if (this->scheduler == "FCFS") {
         choosenScheduler = new FCFS(nullptr, this->processes);
+    } else if (this->scheduler == "SJF non-Preemptive") {
+        choosenScheduler = new SJFNonPreemptive(nullptr, this->processes);
     }
 
     // comboBox->addItem("FCFS");

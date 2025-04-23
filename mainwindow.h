@@ -28,6 +28,7 @@
 #include <QHeaderView>
 #include "roundrobin.h"
 #include "fcfs.h"
+#include "sjfnonpreemptive.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
