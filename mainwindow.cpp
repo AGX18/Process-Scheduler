@@ -400,10 +400,9 @@ void MainWindow::visualizeProcesses()
         choosenScheduler = new PriorityNonPreemptive(nullptr, this->processes);
     } else if (this->scheduler == "SJF Preemptive") {
         choosenScheduler = new SJFPreemptive(nullptr, this->processes);
+    } else if (this->scheduler == "Priorty Preemptive") {
+        choosenScheduler = new PriorityPreemptive(nullptr, this->processes);
     }
-
-    // comboBox->addItem("SJF Preemptive");
-    // comboBox->addItem("Priorty Preemptive");
 
     this->schedulingThread = new QThread(this);
     schedulingThread->setObjectName("Scheduling Thread");
