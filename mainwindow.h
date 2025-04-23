@@ -27,6 +27,7 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include "roundrobin.h"
+#include "fcfs.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

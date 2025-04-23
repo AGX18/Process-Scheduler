@@ -392,7 +392,16 @@ void MainWindow::visualizeProcesses()
     if (this->scheduler == "Round Robin") {
         qDebug() << "round robin";
         choosenScheduler = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+    } else if (this->scheduler == "FCFS") {
+        choosenScheduler = new FCFS(nullptr, this->processes);
     }
+
+    // comboBox->addItem("FCFS");
+    // comboBox->addItem("SJF Preemptive");
+    // comboBox->addItem("SJF non-Preemptive");
+    // comboBox->addItem("Priorty Preemptive");
+    // comboBox->addItem("Priorty non-Preemptive");
+    // comboBox->addItem("Round Robin");
 
     this->schedulingThread = new QThread(this);
     schedulingThread->setObjectName("Scheduling Thread");

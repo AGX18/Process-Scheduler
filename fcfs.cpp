@@ -1,90 +1,91 @@
 #include "fcfs.h"
 
-FCFS::FCFS(QObject *parent = nullptr, std::vector<Process> processes = std::vector<Process>()) : Scheduler(parent, processes) {}
 
+FCFS::FCFS(QObject *parent, std::vector<Process> processes)
+    : Scheduler{parent}, processes(processes), totalWaitingTime(0)
+    , totalTurnaroundTime(0), currentProcess(nullptr), remainingExecTimeForProcess(0), currentTime(0), indexArrived(0),
+    arrivedQueue([](Process* a, Process* b) {
+        return a->getArrivalTime() > b->getArrivalTime(); // Min-heap behavior
+    })
+{
+    // sort them in ascending order according to the arrival time
+    std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
+        return a.getArrivalTime() < b.getArrivalTime();
+    });
+
+    this->schedulerTimer = new QTimer(this);
+    // QThread::sleep(1);  // Sleep for 1 second
+    connect(schedulerTimer, &QTimer::timeout, this, &FCFS::schedule);
+    schedulerTimer->start(1000);  // 1 second interval
+}
+
+
+
+FCFS::~FCFS()
+{
+    delete this->schedulerTimer;
+    // Make sure to delete any dynamically allocated processes (if any) here to avoid memory leaks
+}
 
 void FCFS::schedule() {
-    if (processes.empty()) {
+    qDebug() << "Scheduler tick! Current time: " << this->currentTime;
+
+
+    // Check if a process has arrived
+    for (int i = indexArrived; i < processes.size(); ++i) {
+        if (processes[i].getArrivalTime() <= this->currentTime) {
+            qDebug() << processes[i].getArrivalTime();
+            qDebug() << processes[i].getBurstTime();
+
+            arrivedQueue.push(&processes[i]);
+            indexArrived++;
+        } else {
+            break;  // Since processes are sorted by arrival time
+        }
+    }
+
+    // If no process has arrived and there is no process that is running , do nothing
+    if (arrivedQueue.empty() && this->currentProcess == nullptr) {
+        this->currentTime++;
         return;
     }
 
-    // Sort by arrival time
-    sort(processes.begin(), processes.end(),
-         [](const Process& a, const Process& b) {
+    // Check if a process has been chosen or if we need to pick a new one
+    if (this->currentProcess == nullptr) {
+        // Assign a new process from the arrived queue
+        if (!arrivedQueue.empty()) {
+            this->currentProcess = arrivedQueue.top();
+            arrivedQueue.pop();
+        }
+
+    }
+
+    // Emit signal to update data
+    emit dataChanged(this->currentProcess->getProcessNumber());
+    qDebug() << "decrementing the remaining time of the process: P" << this->currentProcess->getProcessNumber();
+    // Decrement the process's remaining time and the time quantum
+    this->currentProcess->decrementRemainingTime();
+    qDebug() << "remaining time is: " << this->currentProcess->getRemainingTime();
+    this->remainingExecTimeForProcess--;
+
+    // If the process has finished, calculate turnaround and waiting times
+    if (this->currentProcess->getRemainingTime() == 0) {
+        int turnaround = (this->currentTime + 1)- this->currentProcess->getArrivalTime();
+        int waiting = turnaround - this->currentProcess->getBurstTime();
+        this->totalWaitingTime += waiting;
+        this->totalTurnaroundTime += turnaround;
+        emit ProcessFinished(this->currentProcess->getProcessNumber(), waiting, turnaround);
+        this->currentProcess = nullptr;
+    }
+
+    this->currentTime++;  // Increment the clock
+}
+
+void FCFS::addNewProcess(Process *p)
+{
+    qDebug() << "Adding a new Process" << p->getProcessNumber();
+    processes.push_back(*p);  // Add the new process to the list
+    std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
         return a.getArrivalTime() < b.getArrivalTime();
-         });
-
-    int current_time = 0;
-    for (auto& p : processes) {
-        if (p.arrival_time > current_time) {
-            current_time = p.arrival_time;
-        }
-
-        p.setStartTime(current_time);
-        setFinishTime( current_time + p.burst_time );
-        schedule.emplace_back(p.id, p.finish_time);
-        current_time = p.finish_time;
-    }
-
-    /**
-     * select a process every second to allocate the cpu to
-     * wait for a second
-     * then send a signal datachanged `emit datachanged(process.id);`
-     * if the process has finished then emit another signal `emit processFinished(process.id,
-     * process.waitingTime, process.TurnaroundTime);`
-     */
-
-
+    });
 }
-
-
-/**
-#include "pre_req.hpp"
-
-vector<pair<int, int>> fcfs_scheduler(vector<Process>& processes) {
-    vector<pair<int, int>> schedule;
-
-    if (processes.empty()) {
-        return schedule;
-    }
-
-    // Sort by arrival time
-    sort(processes.begin(), processes.end(),
-        [](const Process& a, const Process& b) {
-            return a.arrival_time < b.arrival_time;
-        });
-
-    int current_time = 0;
-    for (auto& p : processes) {
-        if (p.arrival_time > current_time) {
-            current_time = p.arrival_time;
-        }
-
-        p.start_time = current_time;
-        p.finish_time = current_time + p.burst_time;
-        schedule.emplace_back(p.id, p.finish_time);
-        current_time = p.finish_time;
-    }
-
-    // Calculate and display results
-    float total_waiting = 0, total_turnaround = 0;
-    for (const auto& p : processes) {
-        int waiting_time = p.start_time - p.arrival_time;
-        int turnaround_time = p.finish_time - p.arrival_time;
-        total_waiting += waiting_time;
-        total_turnaround += turnaround_time;
-    }
-
-    cout << fixed << setprecision(2); // specifies that two digits should be shown after the decimal point.
-
-    cout << "Average turnaround time: " << total_turnaround / processes.size() << endl;
-    cout << "Average waiting time: " << total_waiting / processes.size() << endl;
-
-    // Print schedule
-    for (const auto& entry : schedule) {
-        cout << "Process " << entry.first << " finishes at " << entry.second << endl;
-    }
-
-    return schedule;
-}
-*/
