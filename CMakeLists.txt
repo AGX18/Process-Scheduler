@@ -33,6 +33,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
         fcfs.cpp fcfs.h
         sjfnonpreemptive.h sjfnonpreemptive.cpp
+        prioritynonpreemptive.h prioritynonpreemptive.cpp
+        sjfpreemptive.h sjfpreemptive.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET OSLiveScheduler APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -396,14 +396,14 @@ void MainWindow::visualizeProcesses()
         choosenScheduler = new FCFS(nullptr, this->processes);
     } else if (this->scheduler == "SJF non-Preemptive") {
         choosenScheduler = new SJFNonPreemptive(nullptr, this->processes);
+    } else if (this->scheduler == "Priorty non-Preemptive") {
+        choosenScheduler = new PriorityNonPreemptive(nullptr, this->processes);
+    } else if (this->scheduler == "SJF Preemptive") {
+        choosenScheduler = new SJFPreemptive(nullptr, this->processes);
     }
 
-    // comboBox->addItem("FCFS");
     // comboBox->addItem("SJF Preemptive");
-    // comboBox->addItem("SJF non-Preemptive");
     // comboBox->addItem("Priorty Preemptive");
-    // comboBox->addItem("Priorty non-Preemptive");
-    // comboBox->addItem("Round Robin");
 
     this->schedulingThread = new QThread(this);
     schedulingThread->setObjectName("Scheduling Thread");
