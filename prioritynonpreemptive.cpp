@@ -36,7 +36,7 @@ void PriorityNonPreemptive::schedule() {
             qDebug() << processes[i].getArrivalTime();
             qDebug() << processes[i].getBurstTime();
 
-            arrivedQueue.push(&processes[i]);
+            arrivedQueue.push(new Process(processes[i]));
             indexArrived++;
         } else {
             break;  // Since processes are sorted by arrival time
@@ -46,6 +46,7 @@ void PriorityNonPreemptive::schedule() {
     // If no process has arrived and there is no process that is running , do nothing
     if (arrivedQueue.empty() && this->currentProcess == nullptr) {
         this->currentTime++;
+        emit dataChanged(-1);
         return;
     }
 

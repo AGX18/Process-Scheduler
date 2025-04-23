@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <queue>
 #include <QTimer>
+#include <QMutex>
+
 
 class FCFS : public Scheduler
 {
@@ -28,6 +30,7 @@ private:
     int indexArrived;
     Process* currentProcess;
     int remainingExecTimeForProcess;
+    QMutex mutex;
 };
 
 #endif // FCFS_H

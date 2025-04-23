@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *startBtn = new QPushButton("Start", this);
 
 
-     QHBoxLayout *headerLayout = new QHBoxLayout;
+    QHBoxLayout *headerLayout = new QHBoxLayout;
 
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
@@ -227,15 +227,56 @@ void MainWindow::visualizeProcesses()
     mainLayout->addWidget(view); // Add scene to the layout
 
     // Example: Function to add a rectangle every second (you'll call this via QTimer)
-    auto addRectangleToScene = [scene]() {
-        static int x = 0;
-        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
-        x += 60;
-    };
+    // auto addRectangleToScene = [scene]() {
+    //     static int x = 0;
+    //     QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
+    //     x += 60;
+    // };
 
-    QTimer *rectTimer = new QTimer(this);
-    connect(rectTimer, &QTimer::timeout, addRectangleToScene);
-    rectTimer->start(1000); // 1 second interval
+    // auto addRectangleToScene = [scene, this](int pid) {
+    //     static int x = 0;
+    //     static int currentTime = 0;
+
+    //     // Decide whether a process is running — if not, show idle
+    //     QString displayText = "Idle";
+    //     if (pid != -1) {
+    //         displayText = QString("P%1").arg(pid);
+    //     }
+
+    //     // Create rectangle
+    //     QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::cyan));
+
+    //     // Time label in small font (top-left)
+    //     QGraphicsTextItem* timeText = scene->addText(QString::number(currentTime));
+    //     QFont smallFont = timeText->font();
+    //     smallFont.setPointSize(7);
+    //     timeText->setFont(smallFont);
+    //     timeText->setDefaultTextColor(Qt::black);
+    //     timeText->setPos(x + 2, 0);
+
+    //     // Process ID or Idle label (centered)
+    //     QGraphicsTextItem* pidText = scene->addText(displayText);
+    //     QFont pidFont = pidText->font();
+    //     pidFont.setPointSize(10);
+    //     pidFont.setBold(true);
+    //     pidText->setFont(pidFont);
+    //     pidText->setDefaultTextColor(Qt::black);
+
+    //     // Center it inside the rectangle
+    //     QRectF rectBounds = rect->rect();
+    //     QRectF textBounds = pidText->boundingRect();
+    //     qreal centerX = x + (rectBounds.width() - textBounds.width()) / 2;
+    //     qreal centerY = (rectBounds.height() - textBounds.height()) / 2;
+    //     pidText->setPos(centerX, centerY);
+
+    //     // Prepare for next tick
+    //     x += 55;
+    //     currentTime++;
+    // };
+
+    // QTimer *rectTimer = new QTimer(this);
+    // connect(scheduler, &Scheduler::dataChanged, addRectangleToScene);
+    // rectTimer->start(1000); // 1 second interval
 
     // === TABLE AREA ===
     QTableWidget *table = new QTableWidget(ProcessWidget::getCounter(), 6, this); // 'counter' is your row count
@@ -248,7 +289,7 @@ void MainWindow::visualizeProcesses()
     // First column : Process ID -> does not change
     for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
         QString value = QString("%1").arg(row);
-         table->setItem(row, 0, new QTableWidgetItem(value));
+        table->setItem(row, 0, new QTableWidgetItem(value));
     }
 
     // Second column : Arrival Time
@@ -414,6 +455,8 @@ void MainWindow::visualizeProcesses()
     QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
 
     QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
+        if (processID == -1) return;  // Skip if CPU is idle
+
         qDebug() << "decrementing";
         QTableWidgetItem* item = table->item(processID, 3);
         if (item) {
@@ -437,6 +480,39 @@ void MainWindow::visualizeProcesses()
     });
 
     connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
+    connect(choosenScheduler, &Scheduler::dataChanged, table, [scene](int pid) {
+        static int x = 0;
+        static int currentTime = 0;
+
+        QString displayText = (pid != -1) ? QString("P%1").arg(pid) : "Idle";
+
+        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::cyan));
+
+        QGraphicsTextItem* timeText = scene->addText(QString::number(currentTime));
+        QFont smallFont = timeText->font();
+        smallFont.setPointSize(7);
+        timeText->setFont(smallFont);
+        timeText->setDefaultTextColor(Qt::black);
+        timeText->setPos(x + 2, 0);
+
+        QGraphicsTextItem* pidText = scene->addText(displayText);
+        QFont pidFont = pidText->font();
+        pidFont.setPointSize(10);
+        pidFont.setBold(true);
+        pidText->setFont(pidFont);
+        pidText->setDefaultTextColor(Qt::black);
+
+        QRectF rectBounds = rect->rect();
+        QRectF textBounds = pidText->boundingRect();
+        pidText->setPos(x + (rectBounds.width() - textBounds.width()) / 2,
+                        (rectBounds.height() - textBounds.height()) / 2);
+
+        x += 55;
+        currentTime++;
+
+        // qDebug() << "Gantt chart update: pid = " << pid;
+    }, Qt::QueuedConnection);
+
 
 
     schedulingThread->start();

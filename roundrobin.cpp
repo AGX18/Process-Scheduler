@@ -11,7 +11,8 @@ RoundRobin::RoundRobin(QObject *parent, std::vector<Process> processes, int time
 
     this->schedulerTimer = new QTimer(this);
     // QThread::sleep(1);  // Sleep for 1 second
-    connect(schedulerTimer, &QTimer::timeout, this, &RoundRobin::schedule);
+    connect(schedulerTimer, &QTimer::timeout, this, &RoundRobin::schedule, Qt::QueuedConnection);
+
     schedulerTimer->start(1000);  // 1 second interval
 }
 
@@ -31,7 +32,7 @@ void RoundRobin::schedule() {
             qDebug() << processes[i].getArrivalTime();
             qDebug() << processes[i].getBurstTime();
 
-            arrivedQueue.push_back(&processes[i]);
+            arrivedQueue.push_back(new Process(processes[i]));
             indexArrived++;
         } else {
             break;  // Since processes are sorted by arrival time
@@ -41,6 +42,7 @@ void RoundRobin::schedule() {
     // If no process has arrived and there is no process that is running , do nothing
     if (arrivedQueue.empty() && this->currentProcess == nullptr) {
         this->currentTime++;
+        emit dataChanged(-1);
         return;
     }
 

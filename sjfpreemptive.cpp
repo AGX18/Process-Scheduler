@@ -47,6 +47,7 @@ void SJFPreemptive::schedule() {
     // If no process has arrived and there is no process that is running , do nothing
     if (arrivedQueue.empty() && this->currentProcess == nullptr) {
         this->currentTime++;
+        emit dataChanged(-1);
         return;
     }
 

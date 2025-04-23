@@ -28,6 +28,7 @@ FCFS::~FCFS()
 }
 
 void FCFS::schedule() {
+    QMutexLocker locker(&mutex);  // Automatically locks and unlocks the mutex
     qDebug() << "Scheduler tick! Current time: " << this->currentTime;
 
 
@@ -37,7 +38,7 @@ void FCFS::schedule() {
             qDebug() << processes[i].getArrivalTime();
             qDebug() << processes[i].getBurstTime();
 
-            arrivedQueue.push(&processes[i]);
+            arrivedQueue.push(new Process(processes[i]));
             indexArrived++;
         } else {
             break;  // Since processes are sorted by arrival time
@@ -47,6 +48,7 @@ void FCFS::schedule() {
     // If no process has arrived and there is no process that is running , do nothing
     if (arrivedQueue.empty() && this->currentProcess == nullptr) {
         this->currentTime++;
+        emit dataChanged(-1);
         return;
     }
 
@@ -83,6 +85,7 @@ void FCFS::schedule() {
 
 void FCFS::addNewProcess(Process *p)
 {
+    QMutexLocker locker(&mutex);
     qDebug() << "Adding a new Process" << p->getProcessNumber();
     processes.push_back(*p);  // Add the new process to the list
     std::sort(this->processes.begin(), this->processes.end(), [](const Process &a, const Process &b) {
