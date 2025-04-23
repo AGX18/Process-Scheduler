@@ -269,8 +269,7 @@ void MainWindow::visualizeProcesses()
 
     mainLayout->addWidget(rightPanel);
     setCentralWidget(centralWidget);
-<<<<<<< Updated upstream
-=======
+
 
 
     // now we get to the part where we visualize the scheduling of the process.
@@ -368,9 +367,10 @@ void MainWindow::visualizeProcesses()
 
     schedulingThread1->start();
     }
-
-
-
->>>>>>> Stashed changes
 }
+
+
+
+
+
 

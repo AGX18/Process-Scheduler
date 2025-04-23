@@ -1,26 +1,31 @@
-#ifndef PREEMPTIVEPRIORITYSCHEDULING_H
-#define PREEMPTIVEPRIORITYSCHEDULING_H
+#ifndef PROCESSCONTAINERWIDGET_H
+#define PROCESSCONTAINERWIDGET_H
 
-#include <vector>
-#include "process.h"
+#include <QWidget>
+#include <QScrollArea>
+#include <QGridLayout>
+#include "processwidget.h"
 
-class PreemptivePriorityScheduling {
+class ProcessContainerWidget : public QWidget
+{
+    Q_OBJECT
+
 public:
-    PreemptivePriorityScheduling(int n);
-    ~PreemptivePriorityScheduling();
+    explicit ProcessContainerWidget(QWidget *parent = nullptr);
 
-    void setProcesses(const std::vector<Process*>& new_processes);
-    void run();
+    void addProcess(QString scheduler);
+    void clearAllProcesses();
+    QVector<ProcessWidget*> getAllProcessWidgets() const;
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
-    int n; // عدد العمليات
-    int completed; // عدد العمليات اللي خلصت
-    int time; // الوقت الحالي
-    int total_waiting_time;
-    int total_turnaround_time;
-    std::vector<Process*> processes;
-
-    Process* getHighestPriorityProcess();
+    QScrollArea *m_scrollArea;
+    QWidget *m_container;
+    QGridLayout *m_gridLayout;
+    int m_row;
+    int m_col;
 };
 
-#endif // PREEMPTIVEPRIORITYSCHEDULING_H
+#endif // PROCESSCONTAINERWIDGET_H
