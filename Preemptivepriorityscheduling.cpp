@@ -1,9 +1,10 @@
-// PreemptivePriorityScheduling.cpp
+
 
 #include "PreemptivePriorityScheduling.h"
 #include <algorithm>
 #include <QDebug>
 #include <QThread>
+#include "process.h"
 
 std::deque<Process*> PreemptivePriorityScheduler::mainqueue;
 std::deque<Process*> PreemptivePriorityScheduler::ready;
@@ -35,7 +36,7 @@ void PreemptivePriorityScheduler::addProcessPPS(Process* p) {
 void PreemptivePriorityScheduler::addNewProcessPPS(Process* p) {
     qDebug() << "New process added: P" << p->getProcessNumber();
     mainqueue.push_back(p);
-    Processes.push_back(*p);
+
 }
 
 void PreemptivePriorityScheduler::schedule() {
@@ -56,7 +57,6 @@ void PreemptivePriorityScheduler::checkArrival() {
         }
     }
 }
-
 void PreemptivePriorityScheduler::preemptivePriorityScheduling(int Q) {
     int valid = 0;
 
@@ -76,6 +76,7 @@ void PreemptivePriorityScheduler::preemptivePriorityScheduling(int Q) {
                   [](Process* a, Process* b){ return a->getPriority() < b->getPriority(); });
 
         Process* current_process = ready.front();
+        if (current_process == nullptr) continue; // تحقق من المؤشر قبل استخدامه
 
         // تدوير بعد انتهاء الـ timeQuantum
         if (valid == Q && current_process->getRemainingTime() > 0) {

@@ -152,11 +152,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 
-void MainWindow::setCurrentRunningProcess(Process* p) {
-    currentRunningProcess = p;
-    // هنا يمكنك أيضاً تحديث Label أو غيره
-}
-
 
 MainWindow::~MainWindow()
 {
@@ -270,7 +265,7 @@ void MainWindow::visualizeProcesses()
 
         if (getcurrentrunningprocess() != nullptr) {
             Process* runningProcess = getcurrentrunningprocess();
-            int runningPid = runningProcess->getProcessNumber();
+            runningPid = runningProcess->getProcessNumber();
             displayText = QString("P%1").arg(runningPid);
         }
 
@@ -464,8 +459,8 @@ void MainWindow::visualizeProcesses()
     Scheduler* choosenScheduler;
     RoundRobin *RR;
     PreemptivePriorityScheduler* PPS;
-
-
+    Scheduler* choosenScheduler1;
+    QThread * schedulingThread1;
     // assign the choosenScheduler
     if (this->scheduler == "Round Robin") {
         qDebug() << "round robin";
@@ -515,25 +510,21 @@ void MainWindow::visualizeProcesses()
 
     else if (this->scheduler == "Priorty Preemptive") {
         qDebug() << "priority preemptive";
+
         PPS = new PreemptivePriorityScheduler(nullptr, this->processes);  // إنشاء الـ Scheduler
-        choosenScheduler = PPS;
+        choosenScheduler1 = PPS;
+
+        schedulingThread1 = new QThread(this); // <-- move this here before any usage
+        schedulingThread1->setObjectName("Scheduling Thread 1");
+
         connect(this, &MainWindow::sendNewProcessInfo, PPS, &PreemptivePriorityScheduler::addNewProcess);
-        // بعد new PreemptivePriorityScheduler...
-        connect(PPS, &PreemptivePriorityScheduler::currentProcessChanged,
-                this, &MainWindow::setCurrentRunningProcess);
-        PPS->moveToThread(schedulingThread);
-        connect(schedulingThread, &QThread::started, PPS, &Scheduler::schedule);
 
+        choosenScheduler1->moveToThread(schedulingThread1);
+        connect(schedulingThread1, &QThread::started, choosenScheduler1, &Scheduler::schedule);
 
-        this->schedulingThread = new QThread(this);
-        this->schedulingThread->setObjectName("Scheduling Thread 1");
+        QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler1, &Scheduler::addNewProcess, Qt::QueuedConnection);
 
-        choosenScheduler->moveToThread(this->schedulingThread);
-        QObject::connect(this->schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
-
-        QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
-
-        QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
+        QObject::connect(choosenScheduler1, &Scheduler::dataChanged, [table](int processID) {
             QTableWidgetItem* item = table->item(processID, 3);
             if (item) {
                 int value = item->text().toInt();
@@ -541,7 +532,7 @@ void MainWindow::visualizeProcesses()
             }
         });
 
-        QObject::connect(choosenScheduler, &Scheduler::ProcessFinished, [table](int processID, int waitingTime, int turnaroundTime) {
+        QObject::connect(choosenScheduler1, &Scheduler::ProcessFinished, [table](int processID, int waitingTime, int turnaroundTime) {
             qDebug() << "finished";
 
             QTableWidgetItem* turnaroundItem = table->item(processID, 4);
@@ -555,11 +546,9 @@ void MainWindow::visualizeProcesses()
             }
         });
 
+        connect(schedulingThread1, &QThread::finished, choosenScheduler1, &QObject::deleteLater);
 
-        connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
-
-
-
-        this->schedulingThread->start();  // بدء الـ Scheduler
+        schedulingThread1->start();
     }
+
 }

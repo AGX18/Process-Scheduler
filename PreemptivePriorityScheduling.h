@@ -16,7 +16,7 @@ public:
     explicit PreemptivePriorityScheduler(QObject *parent, const std::vector<Process>& processes);
     ~PreemptivePriorityScheduler() override;
 
-    // نبدأ الجدولة ضمن خيط Qt
+
     void schedule() override;
 
     void addProcessPPS(Process* p);
