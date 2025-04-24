@@ -1,62 +1,120 @@
 #include "PreemptivePriorityScheduling.h"
+#include <QDebug>
+#include <thread>
 #include <algorithm>
-#include <QThread>
+#include <chrono>
+
+// static queues shared by all instances
+std::deque<Process*> PreemptivePriorityScheduler::mainqueue;
+std::deque<Process*> PreemptivePriorityScheduler::readyQueue;
+
+// في cpp
+PreemptivePriorityScheduler::PreemptivePriorityScheduler(QObject* parent,
+                                                         const std::vector<Process>& Processes)
+    : Scheduler(parent, Processes)    // الآن النوع يطابق exactly منشئ الأب
+{
+    current_time = 0;
+    // نخلق مؤشرات على العناصر المحفوظة في الـ base-class container
+    for (Process& proc : this->Processes) {
+        Process* p = &proc;
+        mainqueue.push_back(p);
+    }
+    std::sort(mainqueue.begin(), mainqueue.end(),
+              [](Process* a, Process* b){
+                  return a->getArrivalTime() < b->getArrivalTime();
+              });
+}
+
+
+PreemptivePriorityScheduler::~PreemptivePriorityScheduler() {
+    qDebug() << "PreemptivePriorityScheduler destructor";
+}
+
+void PreemptivePriorityScheduler::addNewProcess(Process* p) {
+    qDebug() << "PPS: new process added:" << p->getProcessNumber();
+    // add to main queue and re-sort by arrival
+    mainqueue.push_back(p);
+    std::sort(mainqueue.begin(), mainqueue.end(),
+              [](Process* a, Process* b){
+                  return a->getArrivalTime() < b->getArrivalTime();
+              });
+    // also track in base class container
+    Processes.push_back(p);
+}
 
 void PreemptivePriorityScheduler::schedule() {
-    int currentTime = 0;
-    QList<Process*> finishedProcesses;
+    // run the preemptive priority loop in its own std::thread
+    std::thread t(&PreemptivePriorityScheduler::runPriority, this);
+    t.detach();
+}
 
-    while (!processes.isEmpty() || !readyQueue.isEmpty()) {
-        // Add arrived processes to ready queue
-        for (int i = 0; i < processes.size(); ++i) {
-            if (processes[i]->getArrivalTime() <= currentTime) {
-                readyQueue.append(processes[i]);
-                processes.removeAt(i);
-                --i;
-            }
-        }
-
-        // If ready queue not empty, execute process with highest priority
-        if (!readyQueue.isEmpty()) {
-            std::sort(readyQueue.begin(), readyQueue.end(), [](Process* a, Process* b) {
-                return a->getPriority() < b->getPriority();  // smaller number = higher priority
-            });
-
-            Process* currentProcess = readyQueue.first();
-
-            if (currentProcess->getStartTime() == -1)
-                currentProcess->setStartTime(currentTime);
-
-            emit dataChanged(currentProcess->getProcessNumber(), currentTime);
-
-            currentProcess->decrementRemainingTime();
-            waitOneSecond();
-            ++currentTime;
-
-            if (currentProcess->getRemainingTime() == 0) {
-                currentProcess->setFinishTime(currentTime);
-                currentProcess->calculateTimes();
-                finishedProcesses.append(currentProcess);
-                emit ProcessFinished(currentProcess);
-            }
+void PreemptivePriorityScheduler::checkArrival() {
+    // move any newly-arrived processes into readyQueue
+    while (!mainqueue.empty()) {
+        Process* p = mainqueue.front();
+        if (p->getArrivalTime() <= current_time) {
+            readyQueue.push_back(p);
+            mainqueue.pop_front();
         } else {
-            // No ready process → CPU is idle
-            emit dataChanged(-1, currentTime);
+            break;
+        }
+    }
+}
+
+void PreemptivePriorityScheduler::runPriority() {
+    QList<Process*> finished;
+    while (!mainqueue.empty() || !readyQueue.empty()) {
+        checkArrival();
+
+        if (readyQueue.empty()) {
+            // CPU idle
+            emit dataChanged(-1);
             waitOneSecond();
-            ++currentTime;
+            ++current_time;
+            continue;
+        }
+
+        // pick highest priority (smallest priority value)
+        std::sort(readyQueue.begin(), readyQueue.end(),
+                  [](Process* a, Process* b){
+                      return a->getPriority() < b->getPriority();
+                  });
+        Process* cur = readyQueue.front();
+
+        if (cur->getStartTime() == -1)
+            cur->setStartTime(current_time);
+
+        // signal GUI that this process ran one unit
+        emit dataChanged(cur->getProcessNumber());
+
+        // execute one time unit
+        cur->decrementRemainingTime();
+        waitOneSecond();
+        ++current_time;
+
+        if (cur->getRemainingTime() == 0) {
+            // compute times
+            cur->setFinishTime(current_time);
+            int tat = cur->getFinishTime() - cur->getArrivalTime();
+            int wt  = tat - cur->getBurstTime();
+            cur->setTurnaroundTime(tat);
+            cur->setWaitingTime(wt);
+
+            // remove from ready queue
+            readyQueue.pop_front();
+            finished.push_back(cur);
+
+            emit ProcessFinished(cur->getProcessNumber(), wt, tat);
         }
     }
 
-    // حساب المتوسطات بعد الانتهاء
-    double totalTurnaround = 0;
-    double totalWaiting = 0;
-    for (Process* p : finishedProcesses) {
-        totalTurnaround += p->getTurnaroundTime();
-        totalWaiting += p->getWaitingTime();
+    // compute averages
+    double sumT = 0, sumW = 0;
+    for (Process* p : finished) {
+        sumT += p->getTurnaroundTime();
+        sumW += p->getWaitingTime();
     }
-
-    double avgTurnaround = totalTurnaround / finishedProcesses.size();
-    double avgWaiting = totalWaiting / finishedProcesses.size();
-
-    emit averagesCalculated(avgTurnaround, avgWaiting);
+    double avgT = sumT / finished.size();
+    double avgW = sumW / finished.size();
+    emit averagesCalculated(avgT, avgW);
 }
