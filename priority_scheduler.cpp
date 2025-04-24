@@ -1,129 +1,132 @@
 #include "priority_scheduler.h"
+std::deque<Process*> PriorityScheduler::pnp_mainqueue;
+std::deque<Process*> PriorityScheduler::pnp_ready;
 
-
-PriorityScheduler::PriorityScheduler(QObject *parent, std::vector<Process> processes)
-    : Scheduler(parent), processes(processes), currentProcess(nullptr),
-    currentTime(0), indexArrived(0), running(true)
+PriorityScheduler::PriorityScheduler(QObject *parent, std::vector<Process> Processes)
+    : Scheduler(parent, Processes), current_time(0), avg_turnaround_time(0),
+    avg_waiting_time(0), completed(0)
 {
-    // Sort processes by arrival time (initial ordering)
-    std::sort(this->processes.begin(), this->processes.end(),
-              [](const Process &a, const Process &b) {
-                  return a.getArrivalTime() < b.getArrivalTime();
-              });
-
-    this->schedulerTimer = new QTimer(this);
-    connect(schedulerTimer, &QTimer::timeout, this, &PriorityScheduler::schedulerTick);
-    schedulerTimer->start(1000);  // 1 second interval
+    std::sort(pnp_mainqueue.begin(), pnp_mainqueue.end(), [](Process* a, Process* b) {
+        return a->getArrivalTime() < b->getArrivalTime();
+    });
 }
 
 PriorityScheduler::~PriorityScheduler()
 {
-    stopScheduler();
-    delete schedulerTimer;
+    qDebug() << "Priority destructor";
 }
 
-void PriorityScheduler::stopScheduler()
+void PriorityScheduler::checkArrival()
 {
-    running = false;
-    if (schedulerTimer->isActive()) {
-        schedulerTimer->stop();
+    while (!pnp_mainqueue.empty()) {
+        Process* P = pnp_mainqueue.front();
+        if (P->getArrivalTime() <= current_time) {
+            pnp_ready.push_back(P);
+            pnp_mainqueue.pop_front();
+            std::stable_sort(pnp_ready.begin(), pnp_ready.end(), [](Process* a, Process* b) {
+                if (a->getPriority() == b->getPriority())
+                    return a->getArrivalTime() < b->getArrivalTime();
+                 return a->getPriority() < b->getPriority();
+
+            });
+        } else {
+            break;
+        }
     }
 }
 
 void PriorityScheduler::schedule()
 {
-    // Start the timer-based scheduling
-    schedulerTimer->start(1000);
+    std::thread t(&PriorityScheduler::RUNPNP, this);
+    t.detach();
 }
 
-void PriorityScheduler::addNewProcess(Process* p)
+void PriorityScheduler::addProcessPNP(Process* p)
 {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    qDebug() << "Adding new process P" << p->getProcessNumber()
-             << " with priority " << p->getPriority()
-             << " and arrival time " << p->getArrivalTime();
-
-    // Add to main processes list
-    processes.push_back(*p);
-    delete p;
-
-    // If the process has already arrived, add to queue
-    if (p->getArrivalTime() <= currentTime) {
-        arrivedQueue.push_back(&processes.back());
-        // Keep queue sorted by priority (lowest number first)
-        std::stable_sort(arrivedQueue.begin(), arrivedQueue.end(),
-                         [](const Process* a, const Process* b) {
-                             return a->getPriority() < b->getPriority();
-                         });
-    }
+    pnp_mainqueue.push_back(p);
 }
 
-Process* PriorityScheduler::getHighestPriorityProcess()
+void PriorityScheduler::addNewProcessPNP(Process* p)
 {
-    if (arrivedQueue.empty()) return nullptr;
+    qDebug() << "new process added : " << p->getProcessNumber();
+    Processes.push_back(*p);
+    std::sort(pnp_mainqueue.begin(), pnp_mainqueue.end(), [](Process* a, Process* b) {
+        return a->getArrivalTime() < b->getArrivalTime();
+    });
 
-    // The queue is maintained in priority order, so front has highest priority
-    Process* highestPriority = arrivedQueue.front();
-    arrivedQueue.pop_front();
-    return highestPriority;
 }
 
-void PriorityScheduler::schedulerTick()
+void PriorityScheduler::RUNPNP()
 {
-    if (!running) return;
+    qDebug() << "number of processes : " << pnp_mainqueue.size();
 
-    qDebug() << "Priority Scheduler tick! Current time: " << currentTime;
+    Process* current_process=nullptr;
 
-    std::unique_lock<std::mutex> lock(queueMutex);
+    while (completed < Processes.size()) {
+        checkArrival();
 
-    // Check for newly arrived processes
-    for (int i = indexArrived; i < processes.size(); ++i) {
-        if (processes[i].getArrivalTime() <= currentTime) {
-            arrivedQueue.push_back(&processes[i]);
-            indexArrived++;
-            qDebug() << "Process P" << processes[i].getProcessNumber()
-                     << " arrived at time " << currentTime;
-        } else {
-            break;  // Processes are sorted by arrival time
+        if (pnp_ready.empty() && current_process==nullptr) {
+            current_time++;
+            waitOneSecond();
+            continue;
+        }
+
+
+        if (current_process==nullptr){
+            current_process= pnp_ready.front();
+            pnp_ready.pop_front();
+
+        }
+
+        if (current_process->getRemainingTime()==0){
+            if(!pnp_ready.empty()){
+            current_process= pnp_ready.front();
+            pnp_ready.pop_front();
+            }
+            else {
+                current_process =nullptr;
+                running_process = current_process;
+                continue;}
+        }
+         running_process = current_process;
+
+        waitOneSecond();
+
+
+        if (current_process->getRemainingTime() > 0) {  // Only decrement if > 0
+            current_process->decrementRemainingTime();
+
+            emit dataChanged(current_process->getProcessNumber());
+            qDebug() << "Executing P" << current_process->getProcessNumber()
+                     << ", remaining time: " << current_process->getRemainingTime();
+
+
+        current_time++;
+
+        if (current_process->getRemainingTime() == 0) {
+            int turnaround_time = current_time - current_process->getArrivalTime();
+            int waiting_time = turnaround_time - current_process->getBurstTime();
+
+            current_process->setTurnaroundTime(turnaround_time);
+            current_process->setWaitingTime(waiting_time);
+            current_process->setRemainingTime(0); // Just in case
+
+            emit ProcessFinished(current_process->getProcessNumber(), waiting_time, turnaround_time);
+            qDebug() << "Process P" << current_process->getProcessNumber()
+                     << " finished. WT: " << waiting_time << ", TAT: " << turnaround_time;
+
+            avg_turnaround_time += turnaround_time;
+            avg_waiting_time += waiting_time;
+            completed++;
+
+
         }
     }
+ }
+        qDebug() << "Average waiting time = " << avg_waiting_time / completed;
+        qDebug() << "Average turnaround time = " << avg_turnaround_time / completed;
 
-    // Keep queue sorted by priority (lowest number first)
-    std::stable_sort(arrivedQueue.begin(), arrivedQueue.end(),
-                     [](const Process* a, const Process* b) {
-                         return a->getPriority() < b->getPriority();
-                     });
-    lock.unlock();
+         current_process = nullptr;
+         running_process = nullptr;
 
-    // If no process is running, pick the highest priority one from the queue
-    if (currentProcess == nullptr) {
-        currentProcess = getHighestPriorityProcess();
-        if (currentProcess != nullptr) {
-            currentProcess->setStartTime(currentTime);
-            qDebug() << "Started executing P" << currentProcess->getProcessNumber()
-                     << " with priority " << currentProcess->getPriority();
-        }
-    }
-
-    // Execute the current process
-    if (currentProcess != nullptr) {
-        emit dataChanged(currentProcess->getProcessNumber());
-        currentProcess->decrementRemainingTime();
-        qDebug() << "Executing P" << currentProcess->getProcessNumber()
-                 << ", remaining time: " << currentProcess->getRemainingTime();
-
-        // Check if process finished
-        if (currentProcess->getRemainingTime() == 0) {
-            int turnaround = currentTime + 1 - currentProcess->getArrivalTime();
-            int waiting = currentProcess->getStartTime() - currentProcess->getArrivalTime();
-
-            emit ProcessFinished(currentProcess->getProcessNumber(), waiting, turnaround);
-            qDebug() << "Process P" << currentProcess->getProcessNumber()
-                     << " finished. WT: " << waiting << ", TAT: " << turnaround;
-
-            currentProcess = nullptr;
-        }
-    }
-
-    currentTime++;
 }

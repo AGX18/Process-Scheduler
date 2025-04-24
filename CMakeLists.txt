@@ -24,20 +24,24 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 
-        processwidget.h processwidget.cpp
+        processwidget.h
+        processwidget.cpp
         process.h process.cpp
-        processcontainerwidget.h processcontainerwidget.cpp
-        scheduler.h scheduler.cpp
+        processcontainerwidget.h
+        processcontainerwidget.cpp
+        scheduler.h
+        scheduler.cpp
         Data.cpp
-        roundrobin.h roundrobin.cpp
+        roundrobin.h
+        roundrobin.cpp
+        fcfs_scheduler.cpp
+        fcfs_scheduler.cpp
+        fcfs_scheduler.h
         priority_scheduler.h
         priority_scheduler.cpp
-        fcfs_scheduler.h
-        fcfs_scheduler.cpp
         sjf_scheduler.h
-        fcfs_scheduler.cpp
         sjf_scheduler.cpp
-        # fcfs.h fcfs.cpp
+
 
     )
 # Define target properties for Android with Qt 6 as:

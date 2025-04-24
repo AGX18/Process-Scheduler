@@ -1,13 +1,14 @@
 #ifndef FCFS_SCHEDULER_H
 #define FCFS_SCHEDULER_H
+#define FCFS_SCHEDULER_H
 
 #include "scheduler.h"
 #include "process.h"
 #include <algorithm>
 #include <queue>
-#include <mutex>
 #include <deque>
 #include <QTimer>
+#include <memory>
 
 /**
  * @brief The FCFSScheduler class
@@ -22,7 +23,8 @@ public:
      * @param parent QObject parent
      * @param processes Pointer to vector of processes to schedule
      */
-    explicit FCFSScheduler(QObject* parent , std::vector<Process> processes);
+    explicit FCFSScheduler(QObject* parent, std::vector<Process> processes);
+    ~FCFSScheduler();
 
     /**
      * @brief schedule
@@ -30,12 +32,10 @@ public:
      *
      */
 
-    ~FCFSScheduler();
+
     void schedule() override;
-    void addNewProcess(Process* p) override;
-    void stopScheduler();
-
-
+    static void addProcessFCFS(Process* p);
+    void addNewProcessFCFS(Process* p);
 
 
 private:
@@ -43,18 +43,18 @@ private:
      * @brief printResults
      * Prints average waiting and turnaround times
      */
+    int current_time = 0;
+    int completed = 0;
+    float avg_waiting_time = 0;
+    float avg_turnaround_time = 0;
 
-    std::vector<Process> processes;
-    std::deque<Process*> arrivedQueue;
-    QTimer* schedulerTimer;
-    int currentTime;
-    int indexArrived;
-    Process* currentProcess;
-    std::mutex queueMutex;
-    bool running;
-    void schedulerTick();
+  static std::deque<Process*> fcfs_mainqueue;
+  static std::deque<Process*> fcfs_ready;
 
+    void checkArrival();
+    void RUNFCFS();
 };
+
 
 
 #endif // FCFS_SCHEDULER_H

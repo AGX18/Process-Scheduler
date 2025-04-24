@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *startBtn = new QPushButton("Start", this);
 
 
-     QHBoxLayout *headerLayout = new QHBoxLayout;
+    QHBoxLayout *headerLayout = new QHBoxLayout;
 
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
@@ -110,21 +110,30 @@ MainWindow::MainWindow(QWidget *parent)
     // start button
     // rerender
     connect(startBtn, &QPushButton::clicked, this, [processContainer, this](){
-        /**
-         * add all the processes
-        */
-        // std::vector<Process*>* processes = new std::vector<Process*>();
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
-        int i = 0;
-        for (ProcessWidget* widget : processWidgets) {
-            processes.push_back(widget->getProcess());
+
+ for (ProcessWidget* widget : processWidgets) {
+
+        if (this->scheduler == "Round Robin") {
+                RoundRobin::addProcessRR(new Process(widget->getProcess()));
+            }
+
+        else if (this->scheduler == "FCFS") {
+                FCFSScheduler::addProcessFCFS(new Process(widget->getProcess()));
+            }
+
+        else if (this->scheduler == "Priorty non-Preemptive") {     
+                    PriorityScheduler::addProcessPNP(new Process(widget->getProcess()));
+                }
+
+        else if (this->scheduler == "SJF non-Preemptive") {
+                SJFScheduler::addProcessSJFNP(new Process(widget->getProcess()));
 
         }
+                processes.push_back(widget->getProcess());
 
-
-        visualizeProcesses();
-
-
+    }
+       visualizeProcesses();
     });
 
 
@@ -148,6 +157,11 @@ MainWindow::~MainWindow()
     }
     delete ui;
 
+}
+
+Process* MainWindow::getcurrentrunningprocess() {
+    if (MainWindow::processes.empty()) return nullptr;
+    return Scheduler::running_process;  // Return a pointer to the first process
 }
 
 
@@ -227,11 +241,56 @@ void MainWindow::visualizeProcesses()
     mainLayout->addWidget(view); // Add scene to the layout
 
     // Example: Function to add a rectangle every second (you'll call this via QTimer)
-    auto addRectangleToScene = [scene]() {
+    // auto addRectangleToScene = [scene]() {
+    //     static int x = 0;
+    //     QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
+    //     x += 60;
+    // };
+    auto addRectangleToScene = [scene, this]() {
         static int x = 0;
-        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::blue));
-        x += 60;
+        static int currentTime = 0;
+
+        // Decide whether a process is running — if not, show idle
+        QString displayText = "Idle";
+        int runningPid = -1;
+
+        if (getcurrentrunningprocess() != nullptr) {
+            Process* runningProcess = getcurrentrunningprocess();
+            int runningPid = runningProcess->getProcessNumber();
+            displayText = QString("P%1").arg(runningPid);
+        }
+
+        // Create rectangle
+        QGraphicsRectItem *rect = scene->addRect(x, 0, 50, 50, QPen(Qt::black, 2), QBrush(Qt::cyan));
+
+        // Time label in small font (top-left)
+        QGraphicsTextItem* timeText = scene->addText(QString::number(currentTime));
+        QFont smallFont = timeText->font();
+        smallFont.setPointSize(7);
+        timeText->setFont(smallFont);
+        timeText->setDefaultTextColor(Qt::black);
+        timeText->setPos(x + 2, 0);
+
+        // Process ID or Idle label (centered)
+        QGraphicsTextItem* pidText = scene->addText(displayText);
+        QFont pidFont = pidText->font();
+        pidFont.setPointSize(10);
+        pidFont.setBold(true);
+        pidText->setFont(pidFont);
+        pidText->setDefaultTextColor(Qt::black);
+
+        // Center it inside the rectangle
+        QRectF rectBounds = rect->rect();
+        QRectF textBounds = pidText->boundingRect();
+        qreal centerX = x + (rectBounds.width() - textBounds.width()) / 2;
+        qreal centerY = (rectBounds.height() - textBounds.height()) / 2;
+        pidText->setPos(centerX, centerY);
+
+        // Prepare for next tick
+        x += 55;
+        currentTime++;
     };
+
 
     QTimer *rectTimer = new QTimer(this);
     connect(rectTimer, &QTimer::timeout, addRectangleToScene);
@@ -248,7 +307,7 @@ void MainWindow::visualizeProcesses()
     // First column : Process ID -> does not change
     for (int row = 0; row < ProcessWidget::getCounter(); ++row) {
         QString value = QString("%1").arg(row);
-         table->setItem(row, 0, new QTableWidgetItem(value));
+        table->setItem(row, 0, new QTableWidgetItem(value));
     }
 
     // Second column : Arrival Time
@@ -388,24 +447,40 @@ void MainWindow::visualizeProcesses()
     // now we get to the part where we visualize the scheduling of the process.
 
     Scheduler* choosenScheduler;
+    RoundRobin *RR;
+    PriorityScheduler *PNP;
+    FCFSScheduler *FCFS;
+    SJFScheduler *SJFNP;
+
+
     // assign the choosenScheduler
     if (this->scheduler == "Round Robin") {
         qDebug() << "round robin";
-        choosenScheduler = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+        RR = new RoundRobin(nullptr, this->processes, this->timeQuantum);
+        choosenScheduler=RR;
+        connect (this,&MainWindow::sendNewProcessInfo,RR,&RoundRobin::addNewProcessRR);
     }
     else if(this->scheduler == "Priorty non-Preemptive"){
         qDebug() << "Priorty non-Preemptive";
-        choosenScheduler = new PriorityScheduler(nullptr, this->processes);
+        PNP = new PriorityScheduler(nullptr, this->processes);
+        choosenScheduler=PNP;
+        connect (this,&MainWindow::sendNewProcessInfo,PNP,&PriorityScheduler::addNewProcessPNP);
+
     }
     else if(this->scheduler == "FCFS"){
         qDebug() << "FCFS";
-        choosenScheduler = new FCFSScheduler(nullptr, this->processes);
+        FCFS = new FCFSScheduler(nullptr, this->processes);
+        choosenScheduler=FCFS;
+        connect (this,&MainWindow::sendNewProcessInfo,FCFS,&FCFSScheduler::addNewProcessFCFS);
     }
 
     else if(this->scheduler == "SJF non-Preemptive"){
         qDebug() << "SJF non-Preemptive";
-        choosenScheduler = new SJFScheduler(nullptr, this->processes);
+        SJFNP = new SJFScheduler(nullptr, this->processes);
+        choosenScheduler=SJFNP;
+        connect (this,&MainWindow::sendNewProcessInfo,SJFNP,&SJFScheduler::addNewProcessSJFNP);
     }
+
 
 
     this->schedulingThread = new QThread(this);

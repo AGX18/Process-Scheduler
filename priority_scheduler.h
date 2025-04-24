@@ -33,24 +33,25 @@ public:
      */
     ~PriorityScheduler();
     void schedule() override;
-    void addNewProcess(Process* p) override;
-    void stopScheduler();
+    void addNewProcessPNP(Process* p) ;
+    static void addProcessPNP(Process* p);
 
 private:
     /**
      * @brief printResults
      * Prints average waiting and turnaround times
      */
-    std::vector<Process> processes;
-    std::deque<Process*> arrivedQueue;
-    QTimer* schedulerTimer;
-    int currentTime;
-    int indexArrived;
-    Process* currentProcess;
-    std::mutex queueMutex;
-    bool running;
-    void schedulerTick();
-    Process* getHighestPriorityProcess();
+
+    int completed = 0;
+    float avg_waiting_time = 0;
+    float avg_turnaround_time = 0;
+    int current_time = 0;
+
+
+    static std::deque<Process*> pnp_mainqueue;
+    static std::deque<Process*> pnp_ready;
+    void checkArrival();
+    void RUNPNP();
 
 };
 

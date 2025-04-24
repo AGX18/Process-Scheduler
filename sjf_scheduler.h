@@ -10,6 +10,7 @@
 #include <mutex>
 #include <climits>
 #include <QDebug>
+#include <deque>
 
 /**
  * @brief The SJFScheduler class
@@ -33,8 +34,8 @@ public:
      */
     ~SJFScheduler();
     void schedule() override;
-    void addNewProcess(Process* p) override;
-    void stopScheduler();
+    void addNewProcessSJFNP(Process* p) ;
+    static void addProcessSJFNP(Process* p);
 
 private:
     /**
@@ -42,16 +43,15 @@ private:
      * Prints average waiting and turnaround times
      */
 
-    std::vector<Process> processes;
-    std::deque<Process*> arrivedQueue;
-    QTimer* schedulerTimer;
-    int currentTime;
-    int indexArrived;
-    Process* currentProcess;
-    std::mutex queueMutex;
-    bool running;
-    void schedulerTick();
-    Process* getShortestJob();
+    int completed = 0;
+    float avg_waiting_time = 0;
+    float avg_turnaround_time = 0;
+    int current_time = 0;
+
+    static std::deque<Process*> sjf_mainqueue;
+    static std::deque<Process*> sjf_ready;
+    void checkArrival();
+    void RUNSJFNP();
 };
 
 #endif // SJF_SCHEDULER_H
