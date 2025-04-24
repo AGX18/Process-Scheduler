@@ -49,7 +49,8 @@ signals:
 public slots:
     virtual void schedule() = 0;
     virtual void addNewProcess(Process* p);
-
+signals:
+    void currentProcessChanged(Process* process);
 };
 
 #endif // SCHEDULER_H

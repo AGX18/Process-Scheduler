@@ -81,6 +81,9 @@ signals:
 
 public slots:
     void visualizeProcesses();
+    void setCurrentRunningProcess(Process* p);
+
+
 
 
 };

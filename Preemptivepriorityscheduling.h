@@ -1,59 +1,44 @@
-#pragma once
-#include "scheduler.h"
-#include "mainwindow.h"
-#include "process.h"
-#include <QTimer>
+// PreemptivePriorityScheduling.h
+
+#ifndef PREEMPTIVEPRIORITYSCHEDULING_H
+#define PREEMPTIVEPRIORITYSCHEDULING_H
+
+#include <QObject>
 #include <deque>
 #include <vector>
+#include "process.h"
+#include "scheduler.h"
 
-
-class PreemptivePriorityScheduler : public Scheduler
-{
+class PreemptivePriorityScheduler : public Scheduler {
     Q_OBJECT
+
 public:
-    // Constructor
-    PreemptivePriorityScheduler(QObject *parent, std::vector<Process> Processes);
+    explicit PreemptivePriorityScheduler(QObject *parent, const std::vector<Process>& processes);
+    ~PreemptivePriorityScheduler() override;
 
-    // Destructor
-    ~PreemptivePriorityScheduler();
-
-    // Public members (queues)
-    static std::deque<Process*> ready;
-    static std::deque<Process*> mainqueue;
-
-public slots:
-    // Method to start scheduling
+    // نبدأ الجدولة ضمن خيط Qt
     void schedule() override;
 
-    // Method to add a new process to mainqueue
-    static void addProcessPPS(Process* p);
-
-    // Method to add a new process and sort by arrival time
+    void addProcessPPS(Process* p);
     void addNewProcessPPS(Process* p);
 
-private:
-    // Core scheduling function
-    void preemptivePriorityScheduling(int Q);
+signals:
+    void currentProcessChanged(Process* current);  // للإعلام بالعملية الجارية
 
-    // Method to check if any process has arrived
+private:
+    void preemptivePriorityScheduling(int Q);
     void checkArrival();
 
-    // Helper method to sort processes by priority
-    void sortProcessesByPriority();
+    static std::deque<Process*> mainqueue;
+    static std::deque<Process*> ready;
 
-    // Method to update waiting times of processes
-    void updateWaitingTimes();
-
-    // Private members
-    int current_time = 0;
+    int current_time;
+    int completedProcesses;
+    int totalWaitingTime;
+    int totalTurnaroundTime;
     int timeQuantum;
-    int completedProcesses = 0;
-    int totalWaitingTime = 0;
-    int totalTurnaroundTime = 0;
-    Process* current_process = nullptr;
-    QVector<bool> added;
-    bool finished = false;
-
-
+    int totalProcesses;          // عدد العمليات الثابت
+    std::vector<bool> added;     // لتجنّب إضافة العملية أكثر من مرة
 };
 
+#endif // PREEMPTIVEPRIORITYSCHEDULING_H
