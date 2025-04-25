@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+
     // Create a central widget and layout
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
@@ -26,11 +27,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->scheduler = comboBox->itemText(0);
 
+
     QPushButton *startBtn = new QPushButton("Start", this);
 
+
     QHBoxLayout *headerLayout = new QHBoxLayout;
+
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
+
 
     mainLayout->addLayout(headerLayout);
 
@@ -39,12 +44,25 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *addprocessbtn = new QPushButton("Add process", this);
     QPushButton *resetprocessbtn = new QPushButton("Reset", this);
     QHBoxLayout *processconfig = new QHBoxLayout(centralWidget);
-    processconfig->addWidget(addprocessbtn);
-    processconfig->addWidget(resetprocessbtn);
-    mainLayout->addLayout(processconfig);
+    processconfig -> addWidget(addprocessbtn);
+    processconfig -> addWidget(resetprocessbtn);
+    mainLayout-> addLayout(processconfig);
+
 
     // Add to your main layout
     mainLayout->addWidget(processContainer);
+
+    /**
+     * @brief Scheduler
+     *
+     *  FCFS : 0
+        SJF Preemptive : 1
+        SJF nonpreemptive : 2
+        Priority preemptive :3
+        priority nonpreemptive:4
+        round robin :5
+     */
+    // std::vector<bool> Scheduler(6, 0);
 
     connect(addprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         qDebug() << "Add Process button clicked!";
@@ -52,8 +70,8 @@ MainWindow::MainWindow(QWidget *parent)
         processContainer->addProcess(this->scheduler);
     });
 
-    // Handle comboBox changes
-    connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable {
+    // connect()
+    connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable{
         this->scheduler = choice;
         qDebug() << this->scheduler;
         if (scheduler == "Round Robin") {
@@ -79,35 +97,51 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    // Reset button
+
     connect(resetprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         processContainer->clearAllProcesses();
         comboBox->setEnabled(true);
         ProcessWidget::resetCounter();
+
     });
 
-    // Start button
+
+
+    // start button
+    // rerender
     connect(startBtn, &QPushButton::clicked, this, [processContainer, this](){
-        // Add all the processes
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
-        int i = 0;
+
         for (ProcessWidget* widget : processWidgets) {
+
             if (this->scheduler == "Round Robin") {
                 RoundRobin::addProcessRR(new Process(widget->getProcess()));
             }
-            if (this->scheduler == "Priority Preemptive") {
-                PreemptivePriorityScheduler* PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
-                PPS->addNewProcessPPS(new Process(widget->getProcess()));
-            }
-            processes.push_back(widget->getProcess());
-        }
 
+            else if (this->scheduler == "Priorty Preemptive") {
+                Process* newProcess = new Process(widget->getProcess());
+                PreemptivePriorityScheduler::addProcessPPS(newProcess);
+            }
+
+
+            processes.push_back(widget->getProcess());
+
+        }
         visualizeProcesses();
     });
 
+
+    // connect(startBtn, &QPushButton::clicked, this
+    // visualizeProcesses();
+
+
     // Set the central widget
     setCentralWidget(centralWidget);
+
 }
+
+
+
 
 MainWindow::~MainWindow()
 {
@@ -116,12 +150,16 @@ MainWindow::~MainWindow()
         schedulingThread->wait();
     }
     delete ui;
+
 }
 
 Process* MainWindow::getcurrentrunningprocess() {
     if (MainWindow::processes.empty()) return nullptr;
     return Scheduler::running_process;  // Return a pointer to the first process
 }
+
+
+
 void MainWindow::clearScreen()
 {
     // 1. Clear the central widget
@@ -138,9 +176,6 @@ void MainWindow::clearScreen()
     // 2. Clear any remaining top-level widgets
     clearChildWidgets(this);
 
-    // Optional: Reset or recreate central widget
-    QWidget* newCentralWidget = new QWidget(this);
-    setCentralWidget(newCentralWidget); // إعادة تعيين الـ centralWidget إذا لزم الأمر
 }
 
 // Helper function to recursively clear a layout
@@ -164,7 +199,8 @@ void MainWindow::clearChildWidgets(QWidget* parent)
 {
     if (!parent) return;
 
-    const auto children = parent->findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly);
+    const auto children = parent->findChildren<QWidget*>(
+        QString(), Qt::FindDirectChildrenOnly);
 
     for (QWidget* child : children) {
         if (child != centralWidget()) {  // Skip central widget if still present
@@ -406,97 +442,62 @@ void MainWindow::visualizeProcesses()
 
     Scheduler* choosenScheduler;
     RoundRobin *RR;
-    PreemptivePriorityScheduler* PPS;
-    Scheduler* choosenScheduler1;
-    QThread* schedulingThread1;
+    PreemptivePriorityScheduler *PNP;
+
+
+
     // assign the choosenScheduler
     if (this->scheduler == "Round Robin") {
         qDebug() << "round robin";
         RR = new RoundRobin(nullptr, this->processes, this->timeQuantum);
         choosenScheduler=RR;
         connect (this,&MainWindow::sendNewProcessInfo,RR,&RoundRobin::addNewProcessRR);
+    }
+    else if(this->scheduler == "Priorty Preemptive"){
+        qDebug() << "Priorty Preemptive";
+        PNP = new PreemptivePriorityScheduler(nullptr, this->processes);
+        choosenScheduler=PNP;
+        connect (this,&MainWindow::sendNewProcessInfo,PNP,&PreemptivePriorityScheduler::addNewProcessPPS);
 
-
-        this->schedulingThread = new QThread(this);
-        schedulingThread->setObjectName("Scheduling Thread");
-        choosenScheduler->moveToThread(this->schedulingThread);
-        QObject::connect(schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
-
-        // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
-        // and sendNewProcess
-        QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
-
-        QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
-            qDebug() << "decrementing";
-            QTableWidgetItem* item = table->item(processID, 3);
-            if (item) {
-                int value = item->text().toInt();
-                item->setText(QString::number(value - 1));
-            }
-        });
-
-        // ProcessFinished
-        QObject::connect(choosenScheduler, &Scheduler::ProcessFinished, [table](int processID,int waitingTime, int TurnaroundTime) {
-            qDebug() << "finished";
-            QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
-            if (TurnarounIitem) {
-                TurnarounIitem->setText(QString::number(TurnaroundTime));
-            }
-
-            QTableWidgetItem* waitingItem = table->item(processID, 5);
-            if (waitingItem) {
-                waitingItem->setText(QString::number(waitingTime));
-            }
-        });
-
-        connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
-
-
-        schedulingThread->start();
     }
 
 
-    else if (this->scheduler == "Priorty Preemptive") {
 
-        qDebug() << "priority preemptive";
-        PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
-        choosenScheduler1 = PPS;
-        connect(this, &MainWindow::sendNewProcessInfo, PPS, &PreemptivePriorityScheduler::addNewProcess);
+    this->schedulingThread = new QThread(this);
+    schedulingThread->setObjectName("Scheduling Thread");
+    choosenScheduler->moveToThread(this->schedulingThread);
+    QObject::connect(schedulingThread, &QThread::started, choosenScheduler, &Scheduler::schedule);
 
-        schedulingThread1 = new QThread(this);
-        schedulingThread1->setObjectName("Scheduling Thread 1");
+    // TODO: don't forget to connect the signals to the scheduler datachanged, ProcessFinished
+    // and sendNewProcess
+    QObject::connect(this, &MainWindow::sendNewProcessInfo, choosenScheduler, &Scheduler::addNewProcess, Qt::QueuedConnection);
 
-        choosenScheduler1->moveToThread(schedulingThread1);
-        QObject::connect(schedulingThread1, &QThread::started, choosenScheduler1, &Scheduler::schedule);
+    QObject::connect(choosenScheduler, &Scheduler::dataChanged, [table](int processID) {
+        qDebug() << "decrementing";
+        QTableWidgetItem* item = table->item(processID, 3);
+        if (item) {
+            int value = item->text().toInt();
+            item->setText(QString::number(value - 1));
+        }
+    });
 
-        // Connect signals like you did for RoundRobin
-        QObject::connect(choosenScheduler1, &Scheduler::dataChanged, [table](int processID) {
-            qDebug() << "decrementing (priority)";
-            QTableWidgetItem* item = table->item(processID, 3);
-            if (item) {
-                int value = item->text().toInt();
-                item->setText(QString::number(value - 1));
-            }
-        });
+    // ProcessFinished
+    QObject::connect(choosenScheduler, &Scheduler::ProcessFinished, [table](int processID,int waitingTime, int TurnaroundTime) {
+        qDebug() << "finished";
+        QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
+        if (TurnarounIitem) {
+            TurnarounIitem->setText(QString::number(TurnaroundTime));
+        }
 
-        QObject::connect(choosenScheduler1, &Scheduler::ProcessFinished, [table](int processID, int waitingTime, int TurnaroundTime) {
-            qDebug() << "finished (priority)";
-            QTableWidgetItem* TurnarounIitem = table->item(processID, 4);
-            if (TurnarounIitem) {
-                TurnarounIitem->setText(QString::number(TurnaroundTime));
-            }
+        QTableWidgetItem* waitingItem = table->item(processID, 5);
+        if (waitingItem) {
+            waitingItem->setText(QString::number(waitingTime));
+        }
+    });
 
-            QTableWidgetItem* waitingItem = table->item(processID, 5);
-            if (waitingItem) {
-                waitingItem->setText(QString::number(waitingTime));
-            }
-        });
-
-        connect(schedulingThread1, &QThread::finished, choosenScheduler1, &QObject::deleteLater);
-
-        schedulingThread1->start();
-    }
+    connect(this->schedulingThread, &QThread::finished, choosenScheduler, &QObject::deleteLater);
 
 
+    schedulingThread->start();
 
 }
