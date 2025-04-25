@@ -1,58 +1,35 @@
-#pragma once
-#include "scheduler.h"
-#include "mainwindow.h"
-#include "process.h"
-#include <QTimer>
+#ifndef PREEMPTIVEPRIORITYSCHEDULING_H
+#define PREEMPTIVEPRIORITYSCHEDULING_H
+
+#include "Scheduler.h"
 #include <deque>
-#include <vector>
-#include <mutex>
 
 class PreemptivePriorityScheduler : public Scheduler
 {
     Q_OBJECT
-public:
-    // Constructor
-    PreemptivePriorityScheduler(QObject *parent, std::vector<Process> Processes);
 
-    // Destructor
+public:
+    explicit PreemptivePriorityScheduler(QObject *parent = nullptr, std::vector<Process> Processes = {});
     ~PreemptivePriorityScheduler();
 
-    // Public members (queues)
-    static std::deque<Process*> ready;
-    static std::deque<Process*> mainqueue;
-
-public slots:
-    // Method to start scheduling
     void schedule() override;
-
-    // Method to add a new process to mainqueue
-    static void addProcessPPS(Process* p);
-
-    // Method to add a new process and sort by arrival time
+    void addProcessPPS(Process* p);
     void addNewProcessPPS(Process* p);
 
 private:
-    // Core scheduling function
-    void preemptivePriorityScheduling(int Q);
-
-    // Method to check if any process has arrived
-    void checkArrival();
-
-    // Helper method to sort processes by priority
-    void sortProcessesByPriority();
-
-    // Method to update waiting times of processes
-    void updateWaitingTimes();
-
-    // Private members
-    int current_time = 0;
-    int timeQuantum;
-    int completedProcesses = 0;
-    int totalWaitingTime = 0;
-    int totalTurnaroundTime = 0;
+    static std::deque<Process*> mainqueue;
+    static std::deque<Process*> ready;
     Process* current_process = nullptr;
-    QVector<bool> added;
-    bool finished = false;
+    Process* running_process = nullptr;
+    int timeQuantum = 0;
+    int current_time;
+    int totalWaitingTime;
+    int totalTurnaroundTime;
+    int completedProcesses;
 
-    std::mutex mux;
+    void checkArrival();
+    void updateWaitingTimes();
+    void preemptivePriorityScheduling(int Q);
 };
+
+#endif // PREEMPTIVEPRIORITYSCHEDULING_H

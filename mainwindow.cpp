@@ -8,7 +8,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-
     // Create a central widget and layout
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
@@ -27,15 +26,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->scheduler = comboBox->itemText(0);
 
-
     QPushButton *startBtn = new QPushButton("Start", this);
 
-
     QHBoxLayout *headerLayout = new QHBoxLayout;
-
     headerLayout->addWidget(startBtn);
     headerLayout->addWidget(comboBox);
-
 
     mainLayout->addLayout(headerLayout);
 
@@ -44,25 +39,12 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *addprocessbtn = new QPushButton("Add process", this);
     QPushButton *resetprocessbtn = new QPushButton("Reset", this);
     QHBoxLayout *processconfig = new QHBoxLayout(centralWidget);
-    processconfig -> addWidget(addprocessbtn);
-    processconfig -> addWidget(resetprocessbtn);
-    mainLayout-> addLayout(processconfig);
-
+    processconfig->addWidget(addprocessbtn);
+    processconfig->addWidget(resetprocessbtn);
+    mainLayout->addLayout(processconfig);
 
     // Add to your main layout
     mainLayout->addWidget(processContainer);
-
-    /**
-     * @brief Scheduler
-     *
-     *  FCFS : 0
-        SJF Preemptive : 1
-        SJF nonpreemptive : 2
-        Priority preemptive :3
-        priority nonpreemptive:4
-        round robin :5
-     */
-    // std::vector<bool> Scheduler(6, 0);
 
     connect(addprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         qDebug() << "Add Process button clicked!";
@@ -70,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent)
         processContainer->addProcess(this->scheduler);
     });
 
-    // connect()
-    connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable{
+    // Handle comboBox changes
+    connect(comboBox, &QComboBox::currentTextChanged, this, [this, timeQ, label, headerLayout](const QString &choice) mutable {
         this->scheduler = choice;
         qDebug() << this->scheduler;
         if (scheduler == "Round Robin") {
@@ -85,9 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
                     qDebug() << this->timeQuantum;
                 });
             }
-        }
-
-        else {
+        } else {
             if (timeQ != nullptr) {
                 timeQ->deleteLater();
                 timeQ = nullptr;
@@ -99,59 +79,35 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-
+    // Reset button
     connect(resetprocessbtn, &QPushButton::clicked, this, [this, processContainer, comboBox]() {
         processContainer->clearAllProcesses();
         comboBox->setEnabled(true);
         ProcessWidget::resetCounter();
-
     });
 
-
-
-    // start button
-    // rerender
+    // Start button
     connect(startBtn, &QPushButton::clicked, this, [processContainer, this](){
-        /**
-         * add all the processes
-        */
-        // std::vector<Process*>* processes = new std::vector<Process*>();
+        // Add all the processes
         QList<ProcessWidget*> processWidgets = processContainer->findChildren<ProcessWidget*>();
         int i = 0;
         for (ProcessWidget* widget : processWidgets) {
-            if(this->scheduler=="Round Robin"){
+            if (this->scheduler == "Round Robin") {
                 RoundRobin::addProcessRR(new Process(widget->getProcess()));
             }
-            processes.push_back(widget->getProcess());
-
-        }
-        for (ProcessWidget* widget : processWidgets) {
             if (this->scheduler == "Priority Preemptive") {
                 PreemptivePriorityScheduler* PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
                 PPS->addNewProcessPPS(new Process(widget->getProcess()));
             }
-
             processes.push_back(widget->getProcess());
         }
 
-
         visualizeProcesses();
-
-
     });
-
-
-    // connect(startBtn, &QPushButton::clicked, this
-    // visualizeProcesses();
-
 
     // Set the central widget
     setCentralWidget(centralWidget);
-
 }
-
-
-
 
 MainWindow::~MainWindow()
 {
@@ -160,16 +116,12 @@ MainWindow::~MainWindow()
         schedulingThread->wait();
     }
     delete ui;
-
 }
 
 Process* MainWindow::getcurrentrunningprocess() {
     if (MainWindow::processes.empty()) return nullptr;
     return Scheduler::running_process;  // Return a pointer to the first process
 }
-
-
-
 void MainWindow::clearScreen()
 {
     // 1. Clear the central widget
@@ -186,6 +138,9 @@ void MainWindow::clearScreen()
     // 2. Clear any remaining top-level widgets
     clearChildWidgets(this);
 
+    // Optional: Reset or recreate central widget
+    QWidget* newCentralWidget = new QWidget(this);
+    setCentralWidget(newCentralWidget); // إعادة تعيين الـ centralWidget إذا لزم الأمر
 }
 
 // Helper function to recursively clear a layout
@@ -209,8 +164,7 @@ void MainWindow::clearChildWidgets(QWidget* parent)
 {
     if (!parent) return;
 
-    const auto children = parent->findChildren<QWidget*>(
-        QString(), Qt::FindDirectChildrenOnly);
+    const auto children = parent->findChildren<QWidget*>(QString(), Qt::FindDirectChildrenOnly);
 
     for (QWidget* child : children) {
         if (child != centralWidget()) {  // Skip central widget if still present
