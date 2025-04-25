@@ -529,7 +529,7 @@ void MainWindow::visualizeProcesses()
     connect(stopButton, &QPushButton::clicked, [this, stopwatch,rightLayout, choosenScheduler, table]() {
         // Stop the timer
         stopwatch->stop();
-
+        if(this->scheduler== "Round Robin") RoundRobin::stop =true;
         // Stop the scheduler thread
         if (this->schedulingThread && this->schedulingThread->isRunning()) {
             this->schedulingThread->quit();

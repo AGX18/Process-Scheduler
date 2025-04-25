@@ -15,7 +15,8 @@ public:
     static std::deque<Process*> mainqueue;
     static Process* current_process;
      static Process* running_process;
-
+    static bool stop;
+     QThread* RRthread;
 
 public slots:
     void schedule() override;

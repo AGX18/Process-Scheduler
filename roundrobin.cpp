@@ -19,7 +19,7 @@ std::deque<Process*> RoundRobin::mainqueue;
 std::deque<Process*> RoundRobin::ready;
 Process* RoundRobin::current_process=nullptr;
 Process* RoundRobin::running_process=nullptr;
-
+bool RoundRobin:: stop=false;
 RoundRobin::~RoundRobin() {
     qDebug() << "RoundRobin destructor";
 }
@@ -37,7 +37,9 @@ void RoundRobin::checkArrival() {
 }
 
 
-void RoundRobin:: schedule() {
+void RoundRobin::schedule() {
+    if (stop)
+    return;
     std::thread t(&RoundRobin::Roundrobin, this, timeQuantum);
     t.detach();
 
@@ -79,7 +81,7 @@ void RoundRobin:: Roundrobin(int Q) {
 
     int valid = 0;
     //completed < Processes.size()
-    while (true) {
+    while (!stop) {
 
         checkArrival();
         if (ready.empty()) {
