@@ -441,30 +441,16 @@ void MainWindow::visualizeProcesses()
     // now we get to the part where we visualize the scheduling of the process.
 
     Scheduler* choosenScheduler;
-    RoundRobin *RR;
     PreemptivePriorityScheduler *PPS;
 
 
 
     // assign the choosenScheduler
-    if (this->scheduler == "Round Robin") {
-        qDebug() << "round robin";
-        RR = new RoundRobin(nullptr, this->processes, this->timeQuantum);
-        choosenScheduler=RR;
-        connect (this,&MainWindow::sendNewProcessInfo,RR,&RoundRobin::addNewProcessRR);
-    }
-    else if(this->scheduler == "Priorty Preemptive"){
+     if(this->scheduler == "Priorty Preemptive"){
         qDebug() << "Priorty Preemptive";
         PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
         choosenScheduler=PPS;
         connect (this,&MainWindow::sendNewProcessInfo,PPS,&PreemptivePriorityScheduler::addNewProcessPPS);
-        connect(choosenScheduler, &PreemptivePriorityScheduler::dataChanged,
-                this, &MainWindow::onDataChanged);
-
-        connect(choosenScheduler, &PreemptivePriorityScheduler::ProcessFinished,
-                this, &MainWindow::onProcessFinished);
-
-
     }
 
 

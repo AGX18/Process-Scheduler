@@ -1,40 +1,67 @@
-#ifndef PREEMPTIVEPRIORITYSCHEDULING_H
-#define PREEMPTIVEPRIORITYSCHEDULING_H
+#ifndef PREEMPTIVEPRIORITYSCHEDULER_H
+#define PREEMPTIVEPRIORITYSCHEDULER_H
 
-#include "Scheduler.h"
+#include "scheduler.h"
+#include "process.h"
+#include <vector>
 #include <deque>
+#include <QObject>
+#include <algorithm>
+#include <QDebug>
 
+/**
+ * @brief The PreemptivePriorityScheduler class
+ * Preemptive Priority scheduling algorithm
+ */
 class PreemptivePriorityScheduler : public Scheduler
 {
-    Q_OBJECT
-
 public:
-    explicit PreemptivePriorityScheduler(QObject *parent = nullptr, std::vector<Process> Processes = {});
+    /**
+     * @brief PreemptivePriorityScheduler
+     * @param parent QObject parent
+     * @param processes Vector of processes to schedule
+     */
+    explicit PreemptivePriorityScheduler(QObject* parent, std::vector<Process> processes);
+
+    /**
+     * @brief ~PreemptivePriorityScheduler
+     * Destructor
+     */
     ~PreemptivePriorityScheduler();
 
+    /**
+     * @brief schedule
+     * Starts the scheduling process (runs in a separate thread)
+     */
     void schedule() override;
-    void addProcessPPS(Process* p);
+
+    /**
+     * @brief addNewProcessPPS
+     * Adds a new process dynamically during runtime
+     * @param p Pointer to the new process
+     */
     void addNewProcessPPS(Process* p);
+
+    /**
+     * @brief addProcessPPS
+     * Adds process to the main queue
+     * @param p Pointer to the process
+     */
+    static void addProcessPPS(Process* p);
 
 private:
     static std::deque<Process*> mainqueue;
     static std::deque<Process*> ready;
-    Process* current_process = nullptr;
-    Process* running_process = nullptr;
-    int timeQuantum = 0;
-    int current_time;
-    int totalWaitingTime;
-    int totalTurnaroundTime;
-    int completedProcesses;
+
+    int current_time = 0;
+    float totalWaitingTime = 0;
+    float totalTurnaroundTime = 0;
+    int completedProcesses = 0;
 
     void checkArrival();
     void updateWaitingTimes();
-    void preemptivePriorityScheduling(int Q);
-    // في PreemptivePriorityScheduler.h
-signals:
-    void dataChanged(int processID);
-    void ProcessFinished(int processID, int waitingTime, int turnaroundTime);
 
+    void RUNP();  // main scheduling function used in thread
 };
 
-#endif // PREEMPTIVEPRIORITYSCHEDULING_H
+#endif // PREEMPTIVEPRIORITYSCHEDULER_H
