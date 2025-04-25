@@ -30,6 +30,11 @@ private:
     void checkArrival();
     void updateWaitingTimes();
     void preemptivePriorityScheduling(int Q);
+    // في PreemptivePriorityScheduler.h
+signals:
+    void dataChanged(int processID);
+    void ProcessFinished(int processID, int waitingTime, int turnaroundTime);
+
 };
 
 #endif // PREEMPTIVEPRIORITYSCHEDULING_H

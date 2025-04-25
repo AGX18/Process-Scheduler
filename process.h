@@ -21,8 +21,6 @@ public:
 
     int getRemainingTime() const;
 
-    int getPriority() const;
-
     void setRemainingTime(int remainingTime);
 
     int getTurnaroundTime() const;
@@ -42,6 +40,9 @@ public:
 
     int getFinishTime() const;
     void setFinishTime(int newFinishTime);
+
+    int getPriority() const;
+    void setPriority(int newPriority);
 
 private:
     int processNumber;

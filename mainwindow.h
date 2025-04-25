@@ -29,6 +29,7 @@
 #include "roundrobin.h"
 #include "Preemptivepriorityscheduling.h"
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -81,8 +82,6 @@ signals:
 
 public slots:
     void visualizeProcesses();
-
-
 
 
 };

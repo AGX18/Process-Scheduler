@@ -81,6 +81,12 @@ void Process::setFinishTime(int newFinishTime)
     finishTime = newFinishTime;
 }
 
-int Process::getPriority() const {
+int Process::getPriority() const
+{
     return priority;
+}
+
+void Process::setPriority(int newPriority)
+{
+    priority = newPriority;
 }

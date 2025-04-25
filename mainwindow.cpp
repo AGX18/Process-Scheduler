@@ -119,10 +119,9 @@ MainWindow::MainWindow(QWidget *parent)
             }
 
             else if (this->scheduler == "Priorty Preemptive") {
-                Process* newProcess = new Process(widget->getProcess());
-                PreemptivePriorityScheduler::addProcessPPS(newProcess);
+                PreemptivePriorityScheduler* PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
+                PPS->addNewProcessPPS(new Process(widget->getProcess()));
             }
-
 
             processes.push_back(widget->getProcess());
 
@@ -139,6 +138,7 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(centralWidget);
 
 }
+
 
 
 
@@ -442,7 +442,7 @@ void MainWindow::visualizeProcesses()
 
     Scheduler* choosenScheduler;
     RoundRobin *RR;
-    PreemptivePriorityScheduler *PNP;
+    PreemptivePriorityScheduler *PPS;
 
 
 
@@ -455,9 +455,15 @@ void MainWindow::visualizeProcesses()
     }
     else if(this->scheduler == "Priorty Preemptive"){
         qDebug() << "Priorty Preemptive";
-        PNP = new PreemptivePriorityScheduler(nullptr, this->processes);
-        choosenScheduler=PNP;
-        connect (this,&MainWindow::sendNewProcessInfo,PNP,&PreemptivePriorityScheduler::addNewProcessPPS);
+        PPS = new PreemptivePriorityScheduler(nullptr, this->processes);
+        choosenScheduler=PPS;
+        connect (this,&MainWindow::sendNewProcessInfo,PPS,&PreemptivePriorityScheduler::addNewProcessPPS);
+        connect(choosenScheduler, &PreemptivePriorityScheduler::dataChanged,
+                this, &MainWindow::onDataChanged);
+
+        connect(choosenScheduler, &PreemptivePriorityScheduler::ProcessFinished,
+                this, &MainWindow::onProcessFinished);
+
 
     }
 

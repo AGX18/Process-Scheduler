@@ -1,3 +1,4 @@
+
 #include "process.h"
 #include <iostream>
 #include <vector>
@@ -43,8 +44,8 @@ public:
     void storeData(std::vector<Process>&& values) {
         std::unique_lock<std::shared_mutex> lock(data_mutex);
         ProcessVector.insert(ProcessVector.end(),
-                           std::make_move_iterator(values.begin()),
-                           std::make_move_iterator(values.end()));
+                             std::make_move_iterator(values.begin()),
+                             std::make_move_iterator(values.end()));
     }
 
     // Get copy of all data
